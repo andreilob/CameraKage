@@ -6,8 +6,8 @@ public class CameraKage: UIView {
     private var sessionComposer: SessionComposable = SessionComposer()
     private let sessionQueue = DispatchQueue(label: "LA.cameraKage.sessionQueue")
     private let permissionManager: PermissionsManagerProtocol = PermissionsManager()
+    private let delegatesManager: DelegatesManagerProtocol = DelegatesManager()
     private var cameraComponent: CameraComponent!
-    private let delegates: NSHashTable<AnyObject> = NSHashTable.weakObjects()
     
     /// Determines if the `AVCaptureSession` of `CameraKage` is running.
     public var isSessionRunning: Bool { sessionComposer.isSessionRunning }
@@ -21,7 +21,7 @@ public class CameraKage: UIView {
      - parameter delegate: The object that will receive the notifications.
      */
     public func registerDelegate(_ delegate: CameraKageDelegate) {
-        delegates.add(delegate as AnyObject)
+        delegatesManager.registerDelegate(delegate)
     }
     
     /**
@@ -30,7 +30,7 @@ public class CameraKage: UIView {
      - parameter delegate: The object to be removed.
      */
     public func unregisterDelegate(_ delegate: CameraKageDelegate) {
-        delegates.remove(delegate as AnyObject)
+        delegatesManager.unregisterDelegate(delegate)
     }
     
     /**
@@ -241,22 +241,22 @@ public class CameraKage: UIView {
     private func setupSessionDelegate() {
         sessionComposer.onSessionStart = { [weak self] in
             guard let self else { return }
-            invokeDelegates { $0.cameraSessionDidStart(self) }
+            delegatesManager.invokeDelegates { $0.cameraSessionDidStart(self) }
         }
         
         sessionComposer.onSessionStop = { [weak self] in
             guard let self else { return }
-            invokeDelegates { $0.cameraSessionDidStop(self) }
+            delegatesManager.invokeDelegates { $0.cameraSessionDidStop(self) }
         }
         
         sessionComposer.onSessionInterruption = { [weak self] reason in
             guard let self else { return }
-            invokeDelegates { $0.camera(self, sessionWasInterrupted: reason) }
+            delegatesManager.invokeDelegates { $0.camera(self, sessionWasInterrupted: reason) }
         }
         
         sessionComposer.onSessionInterruptionEnd = { [weak self] in
             guard let self else { return }
-            invokeDelegates { $0.cameraSessionInterruptionEnded(self) }
+            delegatesManager.invokeDelegates { $0.cameraSessionInterruptionEnded(self) }
         }
         
         sessionComposer.onSessionReceiveRuntimeError = { [weak self] isRestartable, avError in
@@ -268,19 +268,12 @@ public class CameraKage: UIView {
                 }
             }
             let sessionError = CameraError.CameraSessionErrorReason.runtimeError(avError)
-            invokeDelegates { $0.camera(self, didEncounterError: .cameraSessionError(reason: sessionError))}
+            delegatesManager.invokeDelegates { $0.camera(self, didEncounterError: .cameraSessionError(reason: sessionError))}
         }
         
         sessionComposer.onDeviceSubjectAreaChange = { [weak self] in
             guard let self else { return }
-            invokeDelegates { $0.cameraDeviceDidChangeSubjectArea(self) }
-        }
-    }
-    
-    private func invokeDelegates(_ execute: (CameraKageDelegate) -> Void) {
-        delegates.allObjects.forEach { delegate in
-            guard let delegate = delegate as? CameraKageDelegate else { return }
-            execute(delegate)
+            delegatesManager.invokeDelegates { $0.cameraDeviceDidChangeSubjectArea(self) }
         }
     }
 }
@@ -288,18 +281,18 @@ public class CameraKage: UIView {
 // MARK: - CameraComponentDelegate
 extension CameraKage: CameraComponentDelegate {
     func cameraComponent(_ cameraComponent: CameraComponent, didCapturePhoto photo: Data) {
-        invokeDelegates { $0.camera(self, didOutputPhotoWithData: photo)}
+        delegatesManager.invokeDelegates { $0.camera(self, didOutputPhotoWithData: photo)}
     }
     
     func cameraComponent(_ cameraComponent: CameraComponent, didStartRecordingVideo atFileURL: URL) {
-        invokeDelegates { $0.camera(self, didStartRecordingVideoAtFileURL: atFileURL)}
+        delegatesManager.invokeDelegates { $0.camera(self, didStartRecordingVideoAtFileURL: atFileURL)}
     }
     
     func cameraComponent(_ cameraComponent: CameraComponent, didRecordVideo videoURL: URL) {
-        invokeDelegates { $0.camera(self, didOutputVideoAtFileURL: videoURL)}
+        delegatesManager.invokeDelegates { $0.camera(self, didOutputVideoAtFileURL: videoURL)}
     }
     
     func cameraComponent(_ cameraComponent: CameraComponent, didFail withError: CameraError) {
-        invokeDelegates { $0.camera(self, didEncounterError: withError) }
+        delegatesManager.invokeDelegates { $0.camera(self, didEncounterError: withError) }
     }
 }

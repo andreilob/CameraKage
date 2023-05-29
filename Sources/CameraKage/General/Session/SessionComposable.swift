@@ -11,6 +11,7 @@ protocol SessionComposable {
     var isSessionRunning: Bool { get }
     var outputs: [AVCaptureOutput] { get }
     var inputs: [AVCaptureInput] { get }
+    var connections: [AVCaptureConnection] { get }
     var onSessionReceiveRuntimeError: ((Bool, AVError) -> Void)? { get set }
     var onSessionStart: (() -> Void)? { get set }
     var onSessionStop: (() -> Void)? { get set }

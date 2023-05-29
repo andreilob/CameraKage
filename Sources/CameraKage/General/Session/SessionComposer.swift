@@ -14,6 +14,7 @@ final class SessionComposer: SessionComposable {
     var isSessionRunning: Bool { session.isRunning }
     var outputs: [AVCaptureOutput] { session.outputs }
     var inputs: [AVCaptureInput] { session.inputs }
+    var connections: [AVCaptureConnection] { session.connections }
     var onSessionReceiveRuntimeError: ((Bool, AVError) -> Void)?
     var onSessionStart: (() -> Void)?
     var onSessionStop: (() -> Void)?
@@ -67,8 +68,9 @@ final class SessionComposer: SessionComposable {
     }
     
     func cleanupSession() {
-        session.outputs.forEach { self.session.removeOutput($0) }
-        session.inputs.forEach { self.session.removeInput($0) }
+        session.outputs.forEach { session.removeOutput($0) }
+        session.inputs.forEach { session.removeInput($0) }
+        session.connections.forEach { session.removeConnection($0) }
     }
     
     func startSession() {
