@@ -34,6 +34,15 @@ public protocol CameraKageDelegate: AnyObject {
     func camera(_ camera: CameraKage, didOutputVideoAtFileURL url: URL)
     
     /**
+     Called when a pinch to zoom action happened on the camera component.
+     
+     - parameter camera: The camera composer which is sending the event.
+     - parameter scale: The current zoom scale reported by the pinch gesture.
+     - parameter maxScale: The maximum zoom scale of the camera.
+     */
+    func camera(_ camera: CameraKage, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat)
+    
+    /**
      Called when the camera composer encountered an error. Could be an output, camera or a session related error.
      
      - parameter camera: The camera composer which is sending the event.
@@ -84,6 +93,7 @@ public extension CameraKageDelegate {
     func camera(_ camera: CameraKage, didOutputPhotoWithData data: Data) {}
     func camera(_ camera: CameraKage, didStartRecordingVideoAtFileURL url: URL) {}
     func camera(_ camera: CameraKage, didOutputVideoAtFileURL url: URL) {}
+    func camera(_ camera: CameraKage, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat) {}
     func camera(_ camera: CameraKage, didEncounterError error: CameraError) {}
     func camera(_ camera: CameraKage, sessionWasInterrupted reason: SessionInterruptionReason) {}
     func cameraSessionInterruptionEnded(_ camera: CameraKage) {}

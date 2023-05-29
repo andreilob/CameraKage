@@ -292,6 +292,10 @@ extension CameraKage: CameraComponentDelegate {
         delegatesManager.invokeDelegates { $0.camera(self, didOutputVideoAtFileURL: videoURL)}
     }
     
+    func cameraComponent(_ cameraComponent: CameraComponent, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat) {
+        delegatesManager.invokeDelegates { $0.camera(self, didZoomAtScale: scale, outOfMaximumScale: maxScale) }
+    }
+    
     func cameraComponent(_ cameraComponent: CameraComponent, didFail withError: CameraError) {
         delegatesManager.invokeDelegates { $0.camera(self, didEncounterError: withError) }
     }
