@@ -3,17 +3,25 @@ import AVFoundation
 
 /// The main interface to use the `CameraKage` camera features.
 public class CameraKage: UIView {
-    private var sessionComposer: SessionComposable = SessionComposer()
-    private let sessionQueue = DispatchQueue(label: "LA.cameraKage.sessionQueue")
     private let permissionManager: PermissionsManagerProtocol = PermissionsManager()
     private let delegatesManager: DelegatesManagerProtocol = DelegatesManager()
-    private var cameraComponent: CameraComponent!
+    private var cameraComposer: CameraComposer = CameraComposer()
     
-    /// Determines if the `AVCaptureSession` of `CameraKage` is running.
-    public var isSessionRunning: Bool { sessionComposer.isSessionRunning }
+    /// Determines if the CaptureSession of `CameraKage` is running.
+    public var isSessionRunning: Bool { cameraComposer.isSessionRunning }
     
     /// Determines if `CameraKage` has a video recording in progress.
-    public private(set) var isRecording: Bool = false
+    public var isRecording: Bool { cameraComposer.isRecording }
+    
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupComposer()
+    }
+    
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupComposer()
+    }
     
     /**
      Register a listener for the `CameraKage` to receive notifications regarding the camera session.
@@ -127,23 +135,14 @@ public class CameraKage: UIView {
      - important: Before calling `startCameraSession`, `requestCameraPermission()` and `requestMicrophonePermission()` methods can be called for custom UI usage. If permission requests aren't used, the system will call the alerts automatically.
      */
     public func startCameraSession(with options: CameraComponentParsedOptions = CameraComponentParsedOptions(nil)) {
-        setupCameraComponent(with: options)
-        setupSessionDelegate()
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            sessionComposer.startSession()
-        }
+        cameraComposer.startCameraSession(with: options)
     }
     
     /**
      Stops the camera session and destroys the camera component.
      */
     public func stopCameraSession() {
-        destroyCameraComponent()
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            sessionComposer.stopSession()
-        }
+        cameraComposer.stopCameraSession()
     }
     
     /**
@@ -152,34 +151,23 @@ public class CameraKage: UIView {
      - parameter flashOption: Indicates what flash option should be used when capturing the photo. Default is `.off`.
      - parameter redEyeCorrection: Determines if red eye correction should be applied or not. Default is `true`.
      */
-    public func capturePhoto(_ flashOption: AVCaptureDevice.FlashMode = .off,
+    public func capturePhoto(_ flashOption: FlashMode = .off,
                              redEyeCorrection: Bool = true) {
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            cameraComponent.capturePhoto(flashOption, redEyeCorrection: redEyeCorrection)
-        }
+        cameraComposer.capturePhoto(flashOption, redEyeCorrection: redEyeCorrection)
     }
     
     /**
      Starts a video recording for the camera. `CameraKageDelegate` sends a notification when the recording has started.
      */
     public func startVideoRecording() {
-        sessionQueue.async { [weak self] in
-            guard let self, !isRecording else { return }
-            isRecording = true
-            cameraComponent.startMovieRecording()
-        }
+        cameraComposer.startVideoRecording()
     }
     
     /**
      Stops the video recording. `CameraKageDelegate` sends a notification containing the URL where the video file is stored.
      */
     public func stopVideoRecording() {
-        sessionQueue.async { [weak self] in
-            guard let self, isRecording else { return }
-            isRecording = false
-            cameraComponent.stopMovieRecording()
-        }
+        cameraComposer.stopVideoRecording()
     }
     
     /**
@@ -188,12 +176,7 @@ public class CameraKage: UIView {
      - important: Camera can't be flipped while recording a video. Session is restarted when flipping the camera.
      */
     public func flipCamera() {
-        sessionQueue.async { [weak self] in
-            guard let self, !isRecording else { return }
-            sessionComposer.pauseSession()
-            cameraComponent.flipCamera()
-            sessionComposer.resumeSession()
-        }
+        cameraComposer.flipCamera()
     }
     
     /**
@@ -204,99 +187,62 @@ public class CameraKage: UIView {
      - parameter devicePoint: The point of the camera where the focus should be switched to.
      - parameter monitorSubjectAreaChange: If set `true`, it registers the camera to receive notifications about area changes for the user to re-focus if needed. Default is `true`.
      */
-    public func adjustFocusAndExposure(with focusMode: AVCaptureDevice.FocusMode = .autoFocus,
-                                       exposureMode: AVCaptureDevice.ExposureMode = .autoExpose,
+    public func adjustFocusAndExposure(with focusMode: FocusMode = .autoFocus,
+                                       exposureMode: ExposureMode = .autoExpose,
                                        at devicePoint: CGPoint,
                                        monitorSubjectAreaChange: Bool = true) {
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            cameraComponent.focus(with: focusMode,
-                                  exposureMode: exposureMode,
-                                  at: devicePoint,
-                                  monitorSubjectAreaChange: monitorSubjectAreaChange)
-        }
+        cameraComposer.adjustFocusAndExposure(with: focusMode,
+                                              exposureMode: exposureMode,
+                                              at: devicePoint,
+                                              monitorSubjectAreaChange: monitorSubjectAreaChange)
     }
     
-    private func setupCameraComponent(with options: CameraComponentParsedOptions) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            cameraComponent = CameraComponent(sessionComposer: sessionComposer,
-                                              options: options,
-                                              delegate: self)
-            addSubview(cameraComponent)
-            cameraComponent.layoutToFill(inView: self)
-            cameraComponent.configureSession()
-        }
-    }
-    
-    private func destroyCameraComponent() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            cameraComponent.removeObserver()
-            cameraComponent.removeFromSuperview()
-            cameraComponent = nil
-        }
-    }
-    
-    private func setupSessionDelegate() {
-        sessionComposer.onSessionStart = { [weak self] in
-            guard let self else { return }
-            delegatesManager.invokeDelegates { $0.cameraSessionDidStart(self) }
-        }
-        
-        sessionComposer.onSessionStop = { [weak self] in
-            guard let self else { return }
-            delegatesManager.invokeDelegates { $0.cameraSessionDidStop(self) }
-        }
-        
-        sessionComposer.onSessionInterruption = { [weak self] reason in
-            guard let self else { return }
-            delegatesManager.invokeDelegates { $0.camera(self, sessionWasInterrupted: reason) }
-        }
-        
-        sessionComposer.onSessionInterruptionEnd = { [weak self] in
-            guard let self else { return }
-            delegatesManager.invokeDelegates { $0.cameraSessionInterruptionEnded(self) }
-        }
-        
-        sessionComposer.onSessionReceiveRuntimeError = { [weak self] isRestartable, avError in
-            guard let self else { return }
-            if isRestartable {
-                sessionQueue.async { [weak self] in
-                    guard let self else { return }
-                    sessionComposer.resumeSession()
-                }
-            }
-            let sessionError = CameraError.CameraSessionErrorReason.runtimeError(avError)
-            delegatesManager.invokeDelegates { $0.camera(self, didEncounterError: .cameraSessionError(reason: sessionError))}
-        }
-        
-        sessionComposer.onDeviceSubjectAreaChange = { [weak self] in
-            guard let self else { return }
-            delegatesManager.invokeDelegates { $0.cameraDeviceDidChangeSubjectArea(self) }
-        }
+    private func setupComposer() {
+        cameraComposer.delegate = self
+        addSubview(cameraComposer)
+        cameraComposer.layoutToFill(inView: self)
     }
 }
 
-// MARK: - CameraComponentDelegate
-extension CameraKage: CameraComponentDelegate {
-    func cameraComponent(_ cameraComponent: CameraComponent, didCapturePhoto photo: Data) {
-        delegatesManager.invokeDelegates { $0.camera(self, didOutputPhotoWithData: photo)}
+// MARK: - CameraComposerDelegate
+extension CameraKage: CameraComposerDelegate {
+    func cameraComposer(_ cameraComposer: CameraComposer, didCapturePhoto photo: Data) {
+        delegatesManager.invokeDelegates { $0.camera(self, didOutputPhotoWithData: photo) }
     }
     
-    func cameraComponent(_ cameraComponent: CameraComponent, didStartRecordingVideo atFileURL: URL) {
-        delegatesManager.invokeDelegates { $0.camera(self, didStartRecordingVideoAtFileURL: atFileURL)}
+    func cameraComposer(_ cameraComposer: CameraComposer, didStartRecordingVideo atFileURL: URL) {
+        delegatesManager.invokeDelegates { $0.camera(self, didStartRecordingVideoAtFileURL: atFileURL) }
     }
     
-    func cameraComponent(_ cameraComponent: CameraComponent, didRecordVideo videoURL: URL) {
-        delegatesManager.invokeDelegates { $0.camera(self, didOutputVideoAtFileURL: videoURL)}
+    func cameraComposer(_ cameraComposer: CameraComposer, didRecordVideo videoURL: URL) {
+        delegatesManager.invokeDelegates { $0.camera(self, didOutputVideoAtFileURL: videoURL) }
     }
     
-    func cameraComponent(_ cameraComponent: CameraComponent, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat) {
+    func cameraComposer(_ cameraComposer: CameraComposer, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat) {
         delegatesManager.invokeDelegates { $0.camera(self, didZoomAtScale: scale, outOfMaximumScale: maxScale) }
     }
     
-    func cameraComponent(_ cameraComponent: CameraComponent, didFail withError: CameraError) {
-        delegatesManager.invokeDelegates { $0.camera(self, didEncounterError: withError) }
+    func cameraComposer(_ cameraComposer: CameraComposer, didReceiveError error: CameraError) {
+        delegatesManager.invokeDelegates { $0.camera(self, didEncounterError: error) }
+    }
+    
+    func cameraComposer(_ cameraComposer: CameraComposer, didReceiveSessionInterruption reason: SessionInterruptionReason) {
+        delegatesManager.invokeDelegates { $0.camera(self, sessionWasInterrupted: reason) }
+    }
+    
+    func cameraComposerDidFinishSessionInterruption(_ cameraComposer: CameraComposer) {
+        delegatesManager.invokeDelegates { $0.cameraSessionInterruptionEnded(self) }
+    }
+    
+    func cameraComposerDidStartCameraSession(_ cameraComposer: CameraComposer) {
+        delegatesManager.invokeDelegates { $0.cameraSessionDidStart(self) }
+    }
+    
+    func cameraComposerDidStopCameraSession(_ cameraComposer: CameraComposer) {
+        delegatesManager.invokeDelegates { $0.cameraSessionDidStop(self) }
+    }
+    
+    func cameraComposerDidChangeDeviceAreaOfInterest(_ cameraComposer: CameraComposer) {
+        delegatesManager.invokeDelegates { $0.cameraDeviceDidChangeSubjectArea(self) }
     }
 }

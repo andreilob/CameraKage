@@ -38,6 +38,9 @@ public enum CameraError: Error {
         
         /// Movie capture failure, error message received from the delegate will be passed.
         case failedToOutputMovie(message: String?)
+        
+        /// Occurs when a camera initialization fails.
+        case failedToComposeCamera
     }
     
     public enum CameraSessionErrorReason {

@@ -57,7 +57,7 @@ public enum CameraComponentOptionItem {
 
 /// Options used for the output settings of the camera component.
 /// These should be set before the `startCameraSession()` is called.
-public struct CameraComponentParsedOptions {
+public class CameraComponentParsedOptions {
     public var photoQualityPrioritizationMode: AVCapturePhotoOutput.QualityPrioritization = .balanced
     public var videoStabilizationMode: AVCaptureVideoStabilizationMode = .auto
     public var cameraOrientation: AVCaptureVideoOrientation = .portrait
