@@ -3,8 +3,12 @@
 </p>
 
 <p align="center">
-<a href="https://swift.org/package-manager/"><img src="https://img.shields.io/badge/SPM-supported-DE5C43.svg?style=flat"></a>
+<a href="https://github.com/andreilob/CameraKage/actions/workflows/builder.yml?query=workflows+Swift"><img src="https://img.shields.io/github/actions/workflow/status/andreilob/CameraKage/builder.yml"></a>
+<a href="https://swift.org/package-manager/"><img src="https://img.shields.io/badge/SPM-Supported-red"></a>
+<a href="https://www.swift.org/blog/swift-5.5-released/"><img src="https://img.shields.io/badge/Swift-5.5-green"></a>
+<a href="https://support.apple.com/en-us/HT212788"><img src="https://img.shields.io/badge/iOS-15%2B-informational"></a>               
 <a href="https://raw.githubusercontent.com/andreilob/CameraKage/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-black"></a>
+<a href="https://github.com/andreilob/CameraKage/releases/tag/1.1.0"><img src="https://img.shields.io/badge/Version-1.1.0-informational"></a>         
 </p>
 
 <p align="center">
@@ -54,25 +58,95 @@ With these steps you should have you camera up an running, what's left is just t
 
 ### CameraKage Delegate
 
-CameraKage provides a bunch of handy notifiers. Some important ones would be:
+CameraKage provides a handful of useful notifications regarding the camera and the on-going camera session:
 
 ```swift
-// Used to receive the result of a photo capture.
-func camera(_ camera: CameraKage, didOutputPhotoWithData data: Data)
-
-// Used to receive the result of a video capture.
-func camera(_ camera: CameraKage, didOutputVideoAtFileURL url: URL)
-
-// Used to handle camera related errors.
-func camera(_ camera: CameraKage, didEncounterError error: CameraError)
-
-// Used to handle sessions interruptions. (ex. phone calls, app going into the background, camera taken by another app, etc.)
-func camera(_ camera: CameraKage, sessionWasInterrupted reason: SessionInterruptionReason)
+/**
+     Called when the camera has outputted a photo.
+     
+     - parameter camera: The camera composer which is sending the event.
+     - parameter data: The data representation of the photo.
+     */
+    func camera(_ camera: CameraKage, didOutputPhotoWithData data: Data)
+    
+    /**
+     Called when the camera has started a video recording.
+     
+     - parameter camera: The camera composer which is sending the event.
+     - parameter url: The file location where the video will be stored when recording ends.
+     */
+    func camera(_ camera: CameraKage, didStartRecordingVideoAtFileURL url: URL)
+    
+    /**
+     Called when the camera has outputted a video recording.
+     
+     - parameter camera: The camera composer which is sending the event.
+     - parameter url: The file location where the video is stored.
+     */
+    func camera(_ camera: CameraKage, didOutputVideoAtFileURL url: URL)
+    
+    /**
+     Called when a pinch to zoom action happened on the camera component.
+     
+     - parameter camera: The camera composer which is sending the event.
+     - parameter scale: The current zoom scale reported by the pinch gesture.
+     - parameter maxScale: The maximum zoom scale of the camera.
+     */
+    func camera(_ camera: CameraKage, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat)
+    
+    /**
+     Called when the camera composer encountered an error. Could be an output, camera or a session related error.
+     
+     - parameter camera: The camera composer which is sending the event.
+     - parameter error: The error that was encountered.
+     */
+    func camera(_ camera: CameraKage, didEncounterError error: CameraError)
+    
+    /**
+     Called when the camera session was interrupted. This can happen from various reason but most common
+     ones would be phone calls while using the camera, other apps taking control over the
+     phone camera or app moving to background.
+     
+     - parameter camera: The camera composer which is sending the event.
+     - parameter reason: The reason for the session interruption.
+     
+     - important: When this is called, the camera will freezee so some UI overlay might be necessary on the client side.
+     */
+    func camera(_ camera: CameraKage, sessionWasInterrupted reason: SessionInterruptionReason)
+    
+    /**
+     Called when the camera session interruption has ended. When this is called the camera will resume working.
+     
+     - parameter camera: The camera composer which is sending the event.
+     */
+    func cameraSessionInterruptionEnded(_ camera: CameraKage)
+    
+    /**
+     Called when the camera session was started and the actual camera will be visible on screen.
+     
+     - parameter camera: The camera composer which is sending the event.
+     */
+    func cameraSessionDidStart(_ camera: CameraKage)
+    
+    /**
+     Called when the camera session has stopped.
+     
+     - parameter camera: The camera composer which is sending the event.
+     */
+    func cameraSessionDidStop(_ camera: CameraKage)
+    
+    /**
+     Posted when the instance of AVCaptureDevice has detected a substantial change to the video subject area.
+     This notification is only sent if you first set monitorSubjectAreaChange to `true` in the `focus()` camera method.
+     
+     - parameter camera: The camera composer which is sending the event.
+     */
+    func cameraDeviceDidChangeSubjectArea(_ camera: CameraKage)
 ```
 
 ### Requirements
 - iOS 15.0+
-- Swift 5.8+
+- Swift 5.5+
 
 ### Installation
 
