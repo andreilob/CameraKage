@@ -154,7 +154,7 @@ CameraKage provides a handful of useful notifications regarding the camera and t
 
 - File > Swift Packages > Add Package Dependency
 - Add `https://github.com/andreilob/CameraKage.git`
-- Select "Up to Next Major" with "1.0.0"
+- Select "Up to Next Major" with "2.0.0"
 
 ### Development
 
