@@ -8,7 +8,7 @@
 <a href="https://www.swift.org/blog/swift-5.5-released/"><img src="https://img.shields.io/badge/Swift-5.5-green"></a>
 <a href="https://support.apple.com/en-us/HT212788"><img src="https://img.shields.io/badge/iOS-15%2B-informational"></a>               
 <a href="https://raw.githubusercontent.com/andreilob/CameraKage/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-black"></a>
-<a href="https://github.com/andreilob/CameraKage/releases/tag/1.1.0"><img src="https://img.shields.io/badge/Version-1.1.0-informational"></a>         
+<a href="https://github.com/andreilob/CameraKage/releases/tag/1.1.0"><img src="https://img.shields.io/badge/Version-1.1.1-informational"></a>         
 </p>
 
 <p align="center">
