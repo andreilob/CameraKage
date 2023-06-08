@@ -31,7 +31,7 @@ final class CameraComposer: UIView, CameraComposerProtocol {
         setupCameraComponent(with: options)
         sessionQueue.async { [weak self] in
             guard let self else { return }
-            sessionComposer.startSession()
+            self.sessionComposer.startSession()
         }
     }
     
@@ -39,37 +39,37 @@ final class CameraComposer: UIView, CameraComposerProtocol {
         destroyCameraComponent()
         sessionQueue.async { [weak self] in
             guard let self else { return }
-            sessionComposer.stopSession()
+            self.sessionComposer.stopSession()
         }
     }
     
     func capturePhoto(_ flashOption: FlashMode, redEyeCorrection: Bool) {
         sessionQueue.async { [weak self] in
             guard let self else { return }
-            cameraComponent.capturePhoto(flashOption, redEyeCorrection: redEyeCorrection)
+            self.cameraComponent.capturePhoto(flashOption, redEyeCorrection: redEyeCorrection)
         }
     }
     
     func startVideoRecording() {
         sessionQueue.async { [weak self] in
-            guard let self, !isRecording else { return }
-            cameraComponent.startMovieRecording()
+            guard let self, !self.isRecording else { return }
+            self.cameraComponent.startMovieRecording()
         }
     }
     
     func stopVideoRecording() {
         sessionQueue.async { [weak self] in
-            guard let self, isRecording else { return }
-            cameraComponent.stopMovieRecording()
+            guard let self, self.isRecording else { return }
+            self.cameraComponent.stopMovieRecording()
         }
     }
     
     func flipCamera() {
         sessionQueue.async { [weak self] in
-            guard let self, !isRecording else { return }
-            sessionComposer.pauseSession()
-            cameraComponent.flipCamera()
-            sessionComposer.resumeSession()
+            guard let self, !self.isRecording else { return }
+            self.sessionComposer.pauseSession()
+            self.cameraComponent.flipCamera()
+            self.sessionComposer.resumeSession()
         }
     }
     
@@ -79,7 +79,7 @@ final class CameraComposer: UIView, CameraComposerProtocol {
                                 monitorSubjectAreaChange: Bool) {
         sessionQueue.async { [weak self] in
             guard let self else { return }
-            cameraComponent.focus(with: focusMode,
+            self.cameraComponent.focus(with: focusMode,
                                   exposureMode: exposureMode,
                                   at: devicePoint,
                                   monitorSubjectAreaChange: monitorSubjectAreaChange)
@@ -89,18 +89,18 @@ final class CameraComposer: UIView, CameraComposerProtocol {
     private func setupCameraComponent(with options: CameraComponentParsedOptions) {
         sessionQueue.async { [weak self] in
             guard let self else { return }
-            let cameraCreationResult = sessionComposer.createCamera(options)
+            let cameraCreationResult = self.sessionComposer.createCamera(options)
             switch cameraCreationResult {
             case .success(let camera):
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
-                    cameraComponent = CameraComponent(camera: camera)
+                    self.cameraComponent = CameraComponent(camera: camera)
                     camera.delegate = self
-                    addSubview(cameraComponent)
-                    cameraComponent.layoutToFill(inView: self)
+                    self.addSubview(self.cameraComponent)
+                    self.cameraComponent.layoutToFill(inView: self)
                 }
             case .failure(let error):
-                delegate?.cameraComposer(self, didReceiveError: error)
+                self.delegate?.cameraComposer(self, didReceiveError: error)
             }
         }
     }
@@ -108,8 +108,8 @@ final class CameraComposer: UIView, CameraComposerProtocol {
     private func destroyCameraComponent() {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            cameraComponent.removeFromSuperview()
-            cameraComponent = nil
+            self.cameraComponent.removeFromSuperview()
+            self.cameraComponent = nil
         }
     }
 }

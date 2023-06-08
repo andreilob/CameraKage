@@ -2,18 +2,7 @@ import XCTest
 @testable import CameraKage
 
 final class CameraKageTests: XCTestCase {
-    func test_delegatesManager_registerDelegate() {
-        let managerMock = createDelegatesManagerMock()
-        let sut = makeSUT(delegatesManager: managerMock)
-        
-        XCTAssertEqual(managerMock.delegates.count, 0, "Mock was just created, so count should be 0.")
-        
-        let delegateMock = createDelegateMock()
-        sut.registerDelegate(delegateMock)
-        XCTAssertEqual(managerMock.delegates.count, 1)
-    }
-    
-    func test_delegatesManager_unregisterDelegate() {
+    func test_delegatesManager_registerAndUnregisterDelegate() {
         let managerMock = createDelegatesManagerMock()
         let sut = makeSUT(delegatesManager: managerMock)
         

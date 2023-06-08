@@ -151,7 +151,7 @@ class Camera {
         videoDevice.addObserver()
         videoDevice.onVideoDeviceError = { [weak self] error in
             guard let self else { return }
-            delegate?.camera(self, didFail: error)
+            self.delegate?.camera(self, didFail: error)
         }
         
         return configurationResult
@@ -172,15 +172,15 @@ class Camera {
         
         movieOutput.onMovieCaptureStart = { [weak self] url in
             guard let self else { return }
-            delegate?.camera(self, didStartRecordingVideo: url)
+            self.delegate?.camera(self, didStartRecordingVideo: url)
         }
         movieOutput.onMovieCaptureSuccess = { [weak self] url in
             guard let self else { return }
-            delegate?.camera(self, didRecordVideo: url)
+            self.delegate?.camera(self, didRecordVideo: url)
         }
         movieOutput.onMovieCaptureError = { [weak self] error in
             guard let self else { return }
-            delegate?.camera(self, didFail: error)
+            self.delegate?.camera(self, didFail: error)
         }
         
         return configurationResult
@@ -194,11 +194,11 @@ class Camera {
         
         photoOutput.onPhotoCaptureSuccess = { [weak self] data in
             guard let self else { return }
-            delegate?.camera(self, didCapturePhoto: data)
+            self.delegate?.camera(self, didCapturePhoto: data)
         }
         photoOutput.onPhotoCaptureError = { [weak self] error in
             guard let self else { return }
-            delegate?.camera(self, didFail: error)
+            self.delegate?.camera(self, didFail: error)
         }
         
         return configurationResult

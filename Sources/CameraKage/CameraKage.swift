@@ -182,10 +182,10 @@ public class CameraKage: UIView {
     private func setupComposer() {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            cameraComposer = CameraComposer()
-            cameraComposer.delegate = self
-            addSubview(cameraComposer)
-            cameraComposer.layoutToFill(inView: self)
+            self.cameraComposer = CameraComposer()
+            self.cameraComposer.delegate = self
+            self.addSubview(self.cameraComposer)
+            self.cameraComposer.layoutToFill(inView: self)
         }
     }
 }
