@@ -8,7 +8,7 @@
 import AVFoundation
 
 protocol PermissionsManagerProtocol {
-    func getAuthorizationStatus(for media: AVMediaType) -> PermissionStatus
-    func requestAccess(for media: AVMediaType) async -> Bool
-    func requestAccess(for media: AVMediaType, completion: @escaping((Bool) -> Void))
+    func getAuthorizationStatus(for media: MediaType) -> PermissionStatus
+    func requestAccess(for media: MediaType) async -> Bool
+    func requestAccess(for media: MediaType, completion: @escaping((Bool) -> Void))
 }

@@ -2,92 +2,129 @@ import XCTest
 @testable import CameraKage
 
 final class CameraKageTests: XCTestCase {
-    private var delegatesManager: DelegatesManagerProtocol!
-    private var permissionsManagerMock: PermissionsManagerProtocol!
-    
-    override func setUp() {
-        super.setUp()
-        delegatesManager = DelegatesManagerMock()
-        permissionsManagerMock = PermissionManagerMock()
+    func test_delegatesManager_registerDelegate() {
+        let managerMock = createDelegatesManagerMock()
+        let sut = makeSUT(delegatesManager: managerMock)
+        
+        XCTAssertEqual(managerMock.delegates.count, 0, "Mock was just created, so count should be 0.")
+        
+        let delegateMock = createDelegateMock()
+        sut.registerDelegate(delegateMock)
+        XCTAssertEqual(managerMock.delegates.count, 1)
     }
     
-    override func tearDown() {
-        super.tearDown()
-        delegatesManager = nil
-        permissionsManagerMock = nil
+    func test_delegatesManager_unregisterDelegate() {
+        let managerMock = createDelegatesManagerMock()
+        let sut = makeSUT(delegatesManager: managerMock)
+        
+        XCTAssertEqual(managerMock.delegates.count, 0, "Mock was just created, so count should be 0.")
+        
+        let delegateMock = createDelegateMock()
+        sut.unregisterDelegate(delegateMock)
+        XCTAssertEqual(managerMock.delegates.count, 0, "Delegate mock wasn't registered as a delegate so count was never modified")
+        
+        sut.registerDelegate(delegateMock)
+        XCTAssertEqual(managerMock.delegates.count, 1)
+        
+        sut.unregisterDelegate(delegateMock)
+        XCTAssertEqual(managerMock.delegates.count, 0)
     }
     
-    func testDelegateRegistration() {
-        XCTAssertEqual(delegatesManager.delegates.allObjects.count, 0)
+    func test_delegatesManager_delegatesInvocation() {
+        let managerMock = createDelegatesManagerMock()
+        let delegateMock = createDelegateMock()
+        let sut = makeSUT(delegatesManager: managerMock)
         
-        let firstDelegate = CameraKageDelegateMock()
-        let secondDelegate = CameraKageDelegateMock()
-        delegatesManager.registerDelegate(firstDelegate)
-        delegatesManager.registerDelegate(secondDelegate)
+        XCTAssertFalse(delegateMock.invoked, "Delegate mock was just created, so it shouldn't have been invoked yet.")
         
-        XCTAssertEqual(delegatesManager.delegates.allObjects.count, 2)
-        
-        delegatesManager.unregisterDelegate(firstDelegate)
-        XCTAssertEqual(delegatesManager.delegates.allObjects.count, 1)
-    }
-    
-    func testDelegateInvocation() {
-        let firstDelegate = CameraKageDelegateMock()
-        let secondDelegate = CameraKageDelegateMock()
-        delegatesManager.registerDelegate(firstDelegate)
-        XCTAssertFalse(firstDelegate.invoked)
-        XCTAssertFalse(secondDelegate.invoked)
-        delegatesManager.invokeDelegates { delegate in
+        sut.registerDelegate(delegateMock)
+        managerMock.invokeDelegates { delegate in
             let delegate = delegate as? CameraKageDelegateMock
             XCTAssertEqual(delegate?.invoked, true)
         }
-        delegatesManager.registerDelegate(secondDelegate)
-        XCTAssertTrue(firstDelegate.invoked)
-        XCTAssertFalse(secondDelegate.invoked)
+        
+        XCTAssertTrue(delegateMock.invoked)
     }
     
-    func testGetCameraPermissionStatusWithCallback() {
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .video), .denied)
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .audio), .denied)
-        permissionsManagerMock.requestAccess(for: .video) { granted in
+    func test_permissionsManager_requestVideoPermission_withCompletion() {
+        let managerMock = createPermisssionsManagerMock()
+        let sut = makeSUT(permissionsManager: managerMock)
+        
+        XCTAssertEqual(managerMock.getAuthorizationStatus(for: .video), .notDetermined, "Request hasn't been made, so status should be notDetermined")
+        
+        sut.requestCameraPermission { granted in
             XCTAssertTrue(granted)
-            XCTAssertEqual(self.permissionsManagerMock.getAuthorizationStatus(for: .video), .authorized)
-            XCTAssertEqual(self.permissionsManagerMock.getAuthorizationStatus(for: .audio), .denied)
         }
+        XCTAssertEqual(managerMock.getAuthorizationStatus(for: .video), .authorized)
     }
     
-    func testGetCameraPermissionStatus() async {
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .video), .denied)
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .audio), .denied)
-        let granted = await permissionsManagerMock.requestAccess(for: .video)
+    func test_permissionsManager_requestVideoPermission_withConcurrency() async {
+        let managerMock = createPermisssionsManagerMock()
+        let sut = makeSUT(permissionsManager: managerMock)
+        
+        XCTAssertEqual(managerMock.getAuthorizationStatus(for: .video), .notDetermined, "Request hasn't been made, so status should be notDetermined")
+        
+        let granted = await sut.requestCameraPermission()
         XCTAssertTrue(granted)
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .video), .authorized)
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .audio), .denied)
+        XCTAssertEqual(managerMock.getAuthorizationStatus(for: .video), .authorized)
     }
     
-    func testGetMicrophonePermissionStatusWithCallback() {
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .video), .denied)
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .audio), .denied)
-        permissionsManagerMock.requestAccess(for: .audio) { granted in
+    func test_permissionsManager_requestAudioPermission_withCompletion() {
+        let managerMock = createPermisssionsManagerMock()
+        let sut = makeSUT(permissionsManager: managerMock)
+        
+        XCTAssertEqual(managerMock.getAuthorizationStatus(for: .audio), .notDetermined, "Request hasn't been made, so status should be notDetermined")
+        
+        sut.requestMicrophonePermission { granted in
             XCTAssertTrue(granted)
-            XCTAssertEqual(self.permissionsManagerMock.getAuthorizationStatus(for: .video), .denied)
-            XCTAssertEqual(self.permissionsManagerMock.getAuthorizationStatus(for: .audio), .authorized)
         }
+        XCTAssertEqual(managerMock.getAuthorizationStatus(for: .audio), .authorized)
     }
     
-    func testGetMicrophonePermissionStatus() async {
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .audio), .denied)
-        let granted = await permissionsManagerMock.requestAccess(for: .audio)
+    func test_permissionsManager_requestAudioPermission_withConcurrency() async {
+        let managerMock = createPermisssionsManagerMock()
+        let sut = makeSUT(permissionsManager: managerMock)
+        
+        XCTAssertEqual(managerMock.getAuthorizationStatus(for: .audio), .notDetermined, "Request hasn't been made, so status should be notDetermined")
+        
+        let granted = await sut.requestMicrophonePermission()
         XCTAssertTrue(granted)
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .video), .denied)
-        XCTAssertEqual(permissionsManagerMock.getAuthorizationStatus(for: .audio), .authorized)
+        XCTAssertEqual(managerMock.getAuthorizationStatus(for: .audio), .authorized)
     }
 }
 
-extension XCTestCase {
-    public func trackMemoryLeaks(_ instance: AnyObject, file: StaticString = #filePath, line: UInt = #line) {
-        addTeardownBlock { [weak instance] in
-            XCTAssertNil(instance, "Instance should have been deallocated. Potential memory leak.", file: file, line: line)
-        }
+extension CameraKageTests {
+    func makeSUT(delegatesManager: DelegatesManagerMock,
+                 permissionsManager: PermissionManagerMock,
+                 cameraComposer: CameraComposer) -> CameraKage {
+        let sut = CameraKage(permissionManager: permissionsManager,
+                             delegatesManager: delegatesManager,
+                             cameraComposer: cameraComposer)
+        trackMemoryLeaks(sut)
+        return sut
+    }
+    
+    func makeSUT(delegatesManager: DelegatesManagerMock) -> CameraKage {
+        let sut = CameraKage(delegatesManager: delegatesManager)
+        trackMemoryLeaks(sut)
+        return sut
+    }
+    
+    func makeSUT(permissionsManager: PermissionManagerMock) -> CameraKage {
+        let sut = CameraKage(permissionManager: permissionsManager)
+        trackMemoryLeaks(sut)
+        return sut
+    }
+    
+    func createDelegatesManagerMock() -> DelegatesManagerMock {
+        DelegatesManagerMock()
+    }
+    
+    func createDelegateMock() -> CameraKageDelegateMock {
+        CameraKageDelegateMock()
+    }
+    
+    func createPermisssionsManagerMock() -> PermissionManagerMock {
+        PermissionManagerMock()
     }
 }

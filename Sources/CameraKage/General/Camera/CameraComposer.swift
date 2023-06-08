@@ -7,8 +7,8 @@
 
 import UIKit
 
-final class CameraComposer: UIView {
-    private var sessionComposer: SessionComposerProtocol = SessionComposer()
+final class CameraComposer: UIView, CameraComposerProtocol {
+    private var sessionComposer: SessionComposerProtocol
     private let sessionQueue = DispatchQueue(label: "LA.cameraKage.sessionQueue")
     private var cameraComponent: CameraComponent!
     
@@ -17,9 +17,10 @@ final class CameraComposer: UIView {
     
     weak var delegate: CameraComposerDelegate?
     
-    init() {
+    init(sessionComposer: SessionComposerProtocol = SessionComposer()) {
+        self.sessionComposer = sessionComposer
         super.init(frame: .zero)
-        sessionComposer.delegate = self
+        self.sessionComposer.delegate = self
     }
     
     required init?(coder: NSCoder) {
@@ -42,8 +43,7 @@ final class CameraComposer: UIView {
         }
     }
     
-    func capturePhoto(_ flashOption: FlashMode,
-                      redEyeCorrection: Bool) {
+    func capturePhoto(_ flashOption: FlashMode, redEyeCorrection: Bool) {
         sessionQueue.async { [weak self] in
             guard let self else { return }
             cameraComponent.capturePhoto(flashOption, redEyeCorrection: redEyeCorrection)
@@ -95,7 +95,7 @@ final class CameraComposer: UIView {
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
                     cameraComponent = CameraComponent(camera: camera)
-                    cameraComponent.delegate = self
+                    camera.delegate = self
                     addSubview(cameraComponent)
                     cameraComponent.layoutToFill(inView: self)
                 }
@@ -147,24 +147,24 @@ extension CameraComposer: SessionComposerDelegate {
 }
 
 // MARK: - CameraComponentDelegate
-extension CameraComposer: CameraComponentDelegate {
-    func cameraComponent(_ cameraComponent: CameraComponent, didCapturePhoto photo: Data) {
+extension CameraComposer: CameraDelegate {
+    func camera(_ camera: Camera, didCapturePhoto photo: Data) {
         delegate?.cameraComposer(self, didCapturePhoto: photo)
     }
     
-    func cameraComponent(_ cameraComponent: CameraComponent, didStartRecordingVideo atFileURL: URL) {
+    func camera(_ camera: Camera, didStartRecordingVideo atFileURL: URL) {
         delegate?.cameraComposer(self, didStartRecordingVideo: atFileURL)
     }
     
-    func cameraComponent(_ cameraComponent: CameraComponent, didRecordVideo videoURL: URL) {
+    func camera(_ camera: Camera, didRecordVideo videoURL: URL) {
         delegate?.cameraComposer(self, didRecordVideo: videoURL)
     }
     
-    func cameraComponent(_ cameraComponent: CameraComponent, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat) {
+    func camera(_ camera: Camera, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat) {
         delegate?.cameraComposer(self, didZoomAtScale: scale, outOfMaximumScale: maxScale)
     }
     
-    func cameraComponent(_ cameraComponent: CameraComponent, didFail withError: CameraError) {
+    func camera(_ camera: Camera, didFail withError: CameraError) {
         delegate?.cameraComposer(self, didReceiveError: withError)
     }
 }

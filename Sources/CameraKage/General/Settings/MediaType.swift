@@ -1,13 +1,13 @@
 //
 //  MediaType.swift
-//  CameraKage
+//  
 //
-//  Created by Lobont Andrei on 22.05.2023.
+//  Created by Lobont Andrei on 07.06.2023.
 //
 
 import Foundation
 
 enum MediaType {
-    case photo
+    case audio
     case video
 }

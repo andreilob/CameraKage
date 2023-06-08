@@ -8,13 +8,13 @@
 import AVFoundation
 
 final class SessionComposer: SessionComposerProtocol {
-    private let session: AVCaptureMultiCamSession
+    private let session: CaptureSession
     
     var isSessionRunning: Bool { session.isRunning }
     
     weak var delegate: SessionComposerDelegate?
     
-    init(session: AVCaptureMultiCamSession = AVCaptureMultiCamSession()) {
+    init(session: CaptureSession = CaptureSession()) {
         self.session = session
     }
     
@@ -37,16 +37,10 @@ final class SessionComposer: SessionComposerProtocol {
     }
     
     func createCamera(_ options: CameraComponentParsedOptions) -> Result<Camera, CameraError> {
-        do {
-            guard let camera = try Camera(session: session, options: options) else {
-                return .failure(.cameraComponentError(reason: .failedToComposeCamera))
-            }
-            return .success(camera)
-        } catch let error as CameraError {
-            return .failure(error)
-        } catch {
+        guard let camera = Camera(session: session, options: options) else {
             return .failure(.cameraComponentError(reason: .failedToComposeCamera))
         }
+        return .success(camera)
     }
 }
 

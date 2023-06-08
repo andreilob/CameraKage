@@ -23,13 +23,13 @@ public enum CameraComponentOptionItem {
     /// Default is `.portrait`.
     case cameraOrientation(AVCaptureVideoOrientation)
     
-    /// The type of camera to be used on `CameraComponent`.
-    /// Default is `.builtInWideAngleCamera`.
-    case deviceType(AVCaptureDevice.DeviceType)
+    /// The type of camera to be used.
+    /// Default is `.backWideCamera`.
+    case cameraDevice(CameraDevice)
     
-    /// The position of the device.
-    /// Default is `.back`.
-    case devicePosition(AVCaptureDevice.Position)
+    /// The type of camera to be used when camera is being flipped.
+    /// Default is `.frontCamera`.
+    case flipCameraDevice(CameraDevice)
     
     /// Will define how the layer will display the player's visual content.
     /// Default is `.resizeAspectFill`.
@@ -61,8 +61,8 @@ public class CameraComponentParsedOptions {
     public var photoQualityPrioritizationMode: AVCapturePhotoOutput.QualityPrioritization = .balanced
     public var videoStabilizationMode: AVCaptureVideoStabilizationMode = .auto
     public var cameraOrientation: AVCaptureVideoOrientation = .portrait
-    public var deviceType: AVCaptureDevice.DeviceType = .builtInWideAngleCamera
-    public var devicePosition: AVCaptureDevice.Position = .back
+    public var cameraDevice: CameraDevice = .backWideCamera
+    public var flipCameraDevice: CameraDevice = .frontCamera
     public var videoGravity: AVLayerVideoGravity = .resizeAspectFill
     public var maxVideoDuration: CMTime = .positiveInfinity
     public var pinchToZoomEnabled: Bool = false
@@ -79,10 +79,10 @@ public class CameraComponentParsedOptions {
                 self.videoStabilizationMode = videoStabilizationMode
             case .cameraOrientation(let cameraOrientation):
                 self.cameraOrientation = cameraOrientation
-            case .deviceType(let deviceType):
-                self.deviceType = deviceType
-            case .devicePosition(let devicePosition):
-                self.devicePosition = devicePosition
+            case .cameraDevice(let cameraDevice):
+                self.cameraDevice = cameraDevice
+            case .flipCameraDevice(let flipCameraDevice):
+                self.flipCameraDevice = flipCameraDevice
             case .videoGravity(let videoGravity):
                 self.videoGravity = videoGravity
             case .maxVideoDuration(let maxVideoDuration):

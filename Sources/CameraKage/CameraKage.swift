@@ -1,17 +1,19 @@
 import UIKit
-import AVFoundation
 
 /// The main interface to use the `CameraKage` camera features.
 public class CameraKage: UIView {
-    private let permissionManager: PermissionsManagerProtocol = PermissionsManager()
-    private let delegatesManager: DelegatesManagerProtocol = DelegatesManager()
-    private var cameraComposer: CameraComposer = CameraComposer()
+    private var permissionManager: PermissionsManagerProtocol = PermissionsManager()
+    private var delegatesManager: DelegatesManagerProtocol = DelegatesManager()
+    private var cameraComposer: CameraComposerProtocol!
     
     /// Determines if the CaptureSession of `CameraKage` is running.
     public var isSessionRunning: Bool { cameraComposer.isSessionRunning }
     
     /// Determines if `CameraKage` has a video recording in progress.
     public var isRecording: Bool { cameraComposer.isRecording }
+    
+    /// Available cameras for the client's phone.
+    public var availableCameraDevices: [CameraDevice] { CameraDevice.availableDevices }
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -108,26 +110,6 @@ public class CameraKage: UIView {
     }
     
     /**
-     Starts a discovery session to get the available camera devices for the client's phone.
-     
-     - returns: Returns the list of available `AVCaptureDevice`.
-     */
-    public func getSupportedCameraDevices() -> [AVCaptureDevice] {
-        let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [
-            AVCaptureDevice.DeviceType.builtInWideAngleCamera,
-            AVCaptureDevice.DeviceType.builtInUltraWideCamera,
-            AVCaptureDevice.DeviceType.builtInTelephotoCamera,
-            AVCaptureDevice.DeviceType.builtInDualCamera,
-            AVCaptureDevice.DeviceType.builtInDualWideCamera,
-            AVCaptureDevice.DeviceType.builtInTripleCamera,
-            AVCaptureDevice.DeviceType.builtInTrueDepthCamera
-        ],
-                                                                mediaType: .video,
-                                                                position: .unspecified)
-        return discoverySession.devices
-    }
-    
-    /**
      Starts the camera session.
      
      - parameter options: Options used for the camera setup
@@ -198,9 +180,13 @@ public class CameraKage: UIView {
     }
     
     private func setupComposer() {
-        cameraComposer.delegate = self
-        addSubview(cameraComposer)
-        cameraComposer.layoutToFill(inView: self)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            cameraComposer = CameraComposer()
+            cameraComposer.delegate = self
+            addSubview(cameraComposer)
+            cameraComposer.layoutToFill(inView: self)
+        }
     }
 }
 
@@ -244,5 +230,32 @@ extension CameraKage: CameraComposerDelegate {
     
     func cameraComposerDidChangeDeviceAreaOfInterest(_ cameraComposer: CameraComposer) {
         delegatesManager.invokeDelegates { $0.cameraDeviceDidChangeSubjectArea(self) }
+    }
+}
+
+// MARK: - Internal tests inits
+extension CameraKage {
+    internal convenience init(permissionManager: PermissionsManagerProtocol,
+                              delegatesManager: DelegatesManagerProtocol,
+                              cameraComposer: CameraComposerProtocol) {
+        self.init(frame: .zero)
+        self.permissionManager = permissionManager
+        self.delegatesManager = delegatesManager
+        self.cameraComposer = cameraComposer
+    }
+    
+    internal convenience init(delegatesManager: DelegatesManagerProtocol) {
+        self.init(frame: .zero)
+        self.delegatesManager = delegatesManager
+    }
+    
+    internal convenience init(permissionManager: PermissionsManagerProtocol) {
+        self.init(frame: .zero)
+        self.permissionManager = permissionManager
+    }
+    
+    internal convenience init(cameraComposer: CameraComposerProtocol) {
+        self.init(frame: .zero)
+        self.cameraComposer = cameraComposer
     }
 }

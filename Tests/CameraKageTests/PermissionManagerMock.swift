@@ -5,44 +5,43 @@
 //  Created by Lobont Andrei on 29.05.2023.
 //
 
-import AVFoundation
+import Foundation
 @testable import CameraKage
 
-class PermissionManagerMock: PermissionsManagerProtocol {
-    private var authorizedVideo = false
-    private var authorizedAudio = false
+final class PermissionManagerMock: PermissionsManagerProtocol {
+    private var authorizedVideo: Bool?
+    private var authorizedAudio: Bool?
     
-    func getAuthorizationStatus(for media: AVMediaType) -> PermissionStatus {
+    func getAuthorizationStatus(for media: MediaType) -> PermissionStatus {
         switch media {
-        case .audio: return authorizedAudio ? .authorized : .denied
-        case .video: return authorizedVideo ? .authorized : .denied
-        default: return .notDetermined // not using other media type yet
+        case .audio:
+            guard let authorizedAudio else { return .notDetermined }
+            return authorizedAudio ? .authorized : .denied
+        case .video:
+            guard let authorizedVideo else { return .notDetermined }
+            return authorizedVideo ? .authorized : .denied
         }
     }
     
-    func requestAccess(for media: AVMediaType) async -> Bool {
+    func requestAccess(for media: MediaType) async -> Bool {
         switch media {
         case .audio:
             authorizedAudio = true
-            return authorizedAudio
+            return authorizedAudio ?? true
         case .video:
             authorizedVideo = true
-            return authorizedVideo
-        default:
-            return false // not using other media type yet
+            return authorizedVideo ?? true
         }
     }
     
-    func requestAccess(for media: AVMediaType, completion: @escaping ((Bool) -> Void)) {
+    func requestAccess(for media: MediaType, completion: @escaping ((Bool) -> Void)) {
         switch media {
         case .audio:
             authorizedAudio = true
-            completion(authorizedAudio)
+            completion(authorizedAudio ?? true)
         case .video:
             authorizedVideo = true
-            completion(authorizedVideo)
-        default:
-            break // not using other media type yet
+            completion(authorizedVideo ?? true)
         }
     }
 }
