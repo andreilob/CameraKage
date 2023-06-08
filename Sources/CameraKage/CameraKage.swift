@@ -140,9 +140,13 @@ public class CameraKage: UIView {
     
     /**
      Starts a video recording for the camera. `CameraKageDelegate` sends a notification when the recording has started.
+     
+     - parameter flashOption: Indicates what flash option should be used for the video recording. Default is `.off`.
+     
+     - important: Front camera dosen't support video recordings with flash mode `.on`.
      */
-    public func startVideoRecording() {
-        cameraComposer.startVideoRecording()
+    public func startVideoRecording(_ flashOption: FlashMode) {
+        cameraComposer.startVideoRecording(flashOption)
     }
     
     /**
@@ -180,13 +184,10 @@ public class CameraKage: UIView {
     }
     
     private func setupComposer() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.cameraComposer = CameraComposer()
-            self.cameraComposer.delegate = self
-            self.addSubview(self.cameraComposer)
-            self.cameraComposer.layoutToFill(inView: self)
-        }
+        cameraComposer = CameraComposer()
+        cameraComposer.delegate = self
+        addSubview(cameraComposer)
+        cameraComposer.layoutToFill(inView: self)
     }
 }
 

@@ -15,4 +15,12 @@ extension FlashMode {
         case .auto: return .auto
         }
     }
+    
+    var avTorchModeOption: AVCaptureDevice.TorchMode {
+        switch self {
+        case .on: return .on
+        case .off: return .off
+        case .auto: return .auto
+        }
+    }
 }

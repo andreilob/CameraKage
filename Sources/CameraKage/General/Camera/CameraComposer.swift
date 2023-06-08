@@ -50,10 +50,10 @@ final class CameraComposer: UIView, CameraComposerProtocol {
         }
     }
     
-    func startVideoRecording() {
+    func startVideoRecording(_ flashOption: FlashMode) {
         sessionQueue.async { [weak self] in
             guard let self, !self.isRecording else { return }
-            self.cameraComponent.startMovieRecording()
+            self.cameraComponent.startMovieRecording(flashOption)
         }
     }
     

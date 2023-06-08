@@ -15,7 +15,7 @@ protocol CameraComposerProtocol: UIView {
     func startCameraSession(with options: CameraComponentParsedOptions)
     func stopCameraSession()
     func capturePhoto(_ flashOption: FlashMode, redEyeCorrection: Bool)
-    func startVideoRecording()
+    func startVideoRecording(_ flashOption: FlashMode)
     func stopVideoRecording()
     func flipCamera()
     func adjustFocusAndExposure(with focusMode: FocusMode,

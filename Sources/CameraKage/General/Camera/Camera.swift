@@ -68,12 +68,26 @@ class Camera {
         photoOutput.capturePhoto(flashMode, redEyeCorrection: redEyeCorrection)
     }
     
-    func startMovieRecording() {
+    func startMovieRecording(_ flashMode: FlashMode) {
+        do {
+            try videoDevice.configureFlash(flashMode)
+        } catch let error as CameraError {
+            delegate?.camera(self, didFail: error)
+        } catch {
+            delegate?.camera(self, didFail: .cameraComponentError(reason: .torchModeNotSupported))
+        }
         movieOutput.startMovieRecording()
     }
     
     func stopMovieRecording() {
         movieOutput.stopMovieRecording()
+        do {
+            try videoDevice.configureFlash(.off)
+        } catch let error as CameraError {
+            delegate?.camera(self, didFail: error)
+        } catch {
+            delegate?.camera(self, didFail: .cameraComponentError(reason: .torchModeNotSupported))
+        }
     }
     
     func focus(with focusMode: FocusMode,

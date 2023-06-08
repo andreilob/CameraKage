@@ -41,6 +41,9 @@ public enum CameraError: Error {
         
         /// Occurs when a camera initialization fails.
         case failedToComposeCamera
+        
+        /// Error thrown when a specified torch mode is not supported by the device.
+        case torchModeNotSupported
     }
     
     public enum CameraSessionErrorReason {

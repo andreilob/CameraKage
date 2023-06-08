@@ -34,8 +34,8 @@ class CameraComponent: UIView {
         camera.capturePhoto(flashMode, redEyeCorrection: redEyeCorrection)
     }
     
-    func startMovieRecording() {
-        camera.startMovieRecording()
+    func startMovieRecording(_ flashMode: FlashMode) {
+        camera.startMovieRecording(flashMode)
     }
     
     func stopMovieRecording() {

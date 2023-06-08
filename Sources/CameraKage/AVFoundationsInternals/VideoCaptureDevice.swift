@@ -55,6 +55,20 @@ class VideoCaptureDevice: NSObject {
         return min(min(maxFactor, options.maximumZoomScale), videoDevice.activeFormat.videoMaxZoomFactor)
     }
     
+    func configureFlash(_ flashMode: FlashMode) throws {
+        guard videoDevice.isTorchModeSupported(flashMode.avTorchModeOption),
+              videoDevice.torchMode != flashMode.avTorchModeOption else {
+            throw CameraError.cameraComponentError(reason: .torchModeNotSupported)
+        }
+        do {
+            try videoDevice.lockForConfiguration()
+            videoDevice.torchMode = flashMode.avTorchModeOption
+            videoDevice.unlockForConfiguration()
+        } catch {
+            throw CameraError.cameraComponentError(reason: .failedToLockDevice)
+        }
+    }
+    
     func configureVideoDevice(forSession session: CaptureSession,
                               andOptions options: CameraComponentParsedOptions,
                               isFlipped: Bool) -> Bool {
