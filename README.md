@@ -17,42 +17,53 @@ CameraKage is a fully customizable, pure Swift, plug-and-play camera view.
 
 ## Functionalities
 
-- [x] Fully customizable camera view.
+- [x] Fully customizable and composable camera views.
 - [x] Premission handling.
 - [x] Delegate notifications.
 - [x] Photo and video capture.
 - [x] Camera flipping.
 - [x] Adjustments for exposure and focus of the camera.
 - [x] Capture session error and interruptions notifiers.
+- [x] Flash usage for both photo and video.
 
 ### CameraKage Setup
 
-Start setting up CameraKage by importing the package and creating a view instance, either from interface builder or via code.
+Start setting up CameraKage by importing the package and creating a main module instance.
 
 ```swift
 import CameraKage
 
-let cameraView = CameraKage()
-// Add the camera to your view and adjust the layout as you want.
+let cameraKage = CameraKage()
 ```
-After that, the embeding ViewController should be registered as a delegate in order to receive the wanted events from the camera via the CameraKageDelegate protocol.
+Using the module instance you can handle camera and microphone permissions and create the type of camera view you would need. (Photo Camera, Video Camera or a full camera capable of both photo capture and video recordings)
+```swift
+let cameraPermissionGranted = await cameraKage.requestCameraPermission()
+let microphonePermissionGranted = await cameraKage.requestMicrophonePermission()
+if cameraPermissionGranted, microphonePermissionGranted {
+    let cameraCreationResult = cameraKage.createCameraView(with: CameraComponentParsedOptions([
+        .cameraDevice(.backUltraWideCamera),
+        .flipCameraDevice(.frontCamera),
+        .maxVideoDuration(20.0),
+        .pinchToZoomEnabled(true)
+    ]))
+    switch cameraCreationResult {
+    case .success(let cameraView):
+        // Add camera to your view
+    case .failure(let error):
+        // Handle error that might occur
+    }
+}
+```
+
+To receive notifications from the camera, you have to register as a listener and implement the delegate protocol of the specific camera.
 
 ```swift
 cameraView.registerDelegate(self)
 ```
-To startup the camera session, just call the startCameraSession method of the cameraView and provide the settings desired for the camera.
+After the setup, the last thing to be done is to call the camera `startCamera()` method
 
 ```swift
-// An example of camera settings when starting the camera session.
-cameraView.startCameraSession(with: CameraComponentParsedOptions([
-            .deviceType(.builtInDualWideCamera),
-            .devicePosition(.back),
-            .maxVideoDuration(CMTime(seconds: 15, preferredTimescale: .max)),
-            .photoQualityPrioritizationMode(.quality),
-            .pinchToZoomEnabled(true),
-            .videoStabilizationMode(.auto),
-            .cameraOrientation(.portrait)
-]))
+cameraView.startCamera()
 ```
 With these steps you should have you camera up an running, what's left is just to call the capturePhoto or startVideoRecording methods.
 
@@ -61,87 +72,78 @@ With these steps you should have you camera up an running, what's left is just t
 CameraKage provides a handful of useful notifications regarding the camera and the on-going camera session:
 
 ```swift
-/**
-     Called when the camera has outputted a photo.
-     
-     - parameter camera: The camera composer which is sending the event.
-     - parameter data: The data representation of the photo.
-     */
-    func camera(_ camera: CameraKage, didOutputPhotoWithData data: Data)
-    
     /**
-     Called when the camera has started a video recording.
+     Called when a pinch to zoom action happened on the camera.
      
-     - parameter camera: The camera composer which is sending the event.
-     - parameter url: The file location where the video will be stored when recording ends.
-     */
-    func camera(_ camera: CameraKage, didStartRecordingVideoAtFileURL url: URL)
-    
-    /**
-     Called when the camera has outputted a video recording.
-     
-     - parameter camera: The camera composer which is sending the event.
-     - parameter url: The file location where the video is stored.
-     */
-    func camera(_ camera: CameraKage, didOutputVideoAtFileURL url: URL)
-    
-    /**
-     Called when a pinch to zoom action happened on the camera component.
-     
-     - parameter camera: The camera composer which is sending the event.
      - parameter scale: The current zoom scale reported by the pinch gesture.
      - parameter maxScale: The maximum zoom scale of the camera.
      */
-    func camera(_ camera: CameraKage, didZoomAtScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat)
+    func cameraDidZoom(atScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat)
     
     /**
-     Called when the camera composer encountered an error. Could be an output, camera or a session related error.
+     Called when the camera encountered an error.
      
-     - parameter camera: The camera composer which is sending the event.
      - parameter error: The error that was encountered.
      */
-    func camera(_ camera: CameraKage, didEncounterError error: CameraError)
+    func cameraDidEncounterError(error: CameraError)
     
     /**
-     Called when the camera session was interrupted. This can happen from various reason but most common
-     ones would be phone calls while using the camera, other apps taking control over the
-     phone camera or app moving to background.
+     Called when the camera session was interrupted. This can happen from various reason but most common ones would be phone calls while using the camera, other apps taking control over the phone camera or app moving to background.
      
-     - parameter camera: The camera composer which is sending the event.
      - parameter reason: The reason for the session interruption.
      
      - important: When this is called, the camera will freezee so some UI overlay might be necessary on the client side.
      */
-    func camera(_ camera: CameraKage, sessionWasInterrupted reason: SessionInterruptionReason)
+    func cameraDidReceiveSessionInterruption(withReason reason: SessionInterruptionReason)
     
     /**
      Called when the camera session interruption has ended. When this is called the camera will resume working.
-     
-     - parameter camera: The camera composer which is sending the event.
      */
-    func cameraSessionInterruptionEnded(_ camera: CameraKage)
+    func cameraDidFinishSessionInterruption()
     
     /**
      Called when the camera session was started and the actual camera will be visible on screen.
-     
-     - parameter camera: The camera composer which is sending the event.
      */
-    func cameraSessionDidStart(_ camera: CameraKage)
+    func cameraDidStartCameraSession()
     
     /**
      Called when the camera session has stopped.
-     
-     - parameter camera: The camera composer which is sending the event.
      */
-    func cameraSessionDidStop(_ camera: CameraKage)
+    func cameraDidStopCameraSession()
     
     /**
-     Posted when the instance of AVCaptureDevice has detected a substantial change to the video subject area.
-     This notification is only sent if you first set monitorSubjectAreaChange to `true` in the `focus()` camera method.
-     
-     - parameter camera: The camera composer which is sending the event.
+     Called when the instance of AVCaptureDevice has detected a substantial change to the video subject area. This notification is only sent if you first set monitorSubjectAreaChange to `true` in the `focus()` camera method.
      */
-    func cameraDeviceDidChangeSubjectArea(_ camera: CameraKage)
+    func cameraDidChangeDeviceAreaOfInterest()
+```
+
+And also there are the camera specific delegate methods:
+
+### Photo Camera
+```swift
+    /**
+     Called when the camera has outputted a photo.
+     
+     - parameter data: The data representation of the photo.
+     */
+    func cameraDidCapturePhoto(withData data: Data)
+```
+
+### Video Camera
+```swift
+    /**
+     Called when the camera has started a video recording.
+     
+     - parameter url: The URL file location where the video is being recorded.
+     */
+    func cameraDidStartVideoRecording(atFileURL url: URL)
+    
+    /**
+     Called when the camera has outputted a video recording.
+     
+     - parameter url: The URL of the video file location.
+     */
+    func cameraDidFinishVideoRecording(atFileURL url: URL)
 ```
 
 ### Requirements

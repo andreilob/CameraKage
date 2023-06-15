@@ -10,25 +10,24 @@ import Foundation
 protocol DelegatesManagerProtocol {
     var delegates: NSHashTable<AnyObject> { get }
     
-    func registerDelegate(_ delegate: CameraKageDelegate)
-    func unregisterDelegate(_ delegate: CameraKageDelegate)
-    func invokeDelegates(_ execute: (CameraKageDelegate) -> Void)
+    func registerDelegate(_ delegate: AnyObject)
+    func unregisterDelegate(_ delegate: AnyObject)
+    func invokeDelegates(_ execute: (AnyObject) -> Void)
 }
 
 final class DelegatesManager: DelegatesManagerProtocol {
     let delegates: NSHashTable<AnyObject> = NSHashTable.weakObjects()
     
-    func registerDelegate(_ delegate: CameraKageDelegate) {
-        delegates.add(delegate as AnyObject)
+    func registerDelegate(_ delegate: AnyObject) {
+        delegates.add(delegate)
     }
     
-    func unregisterDelegate(_ delegate: CameraKageDelegate) {
-        delegates.remove(delegate as AnyObject)
+    func unregisterDelegate(_ delegate: AnyObject) {
+        delegates.remove(delegate)
     }
     
-    func invokeDelegates(_ execute: (CameraKageDelegate) -> Void) {
+    func invokeDelegates(_ execute: (AnyObject) -> Void) {
         delegates.allObjects.forEach { delegate in
-            guard let delegate = delegate as? CameraKageDelegate else { return }
             execute(delegate)
         }
     }

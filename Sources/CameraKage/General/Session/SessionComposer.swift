@@ -7,123 +7,224 @@
 
 import AVFoundation
 
-final class SessionComposer: SessionComposerProtocol {
+final class SessionComposer {
     private let session: CaptureSession
-    
-    var isSessionRunning: Bool { session.isRunning }
-    
-    weak var delegate: SessionComposerDelegate?
     
     init(session: CaptureSession = CaptureSession()) {
         self.session = session
     }
     
-    func startSession() {
-        addObservers()
-        session.startRunning()
-    }
-    
-    func stopSession() {
-        session.stopRunning()
-        removeObservers()
-    }
-    
-    func pauseSession() {
-        session.stopRunning()
-    }
-    
-    func resumeSession() {
-        session.startRunning()
-    }
-    
-    func createCamera(_ options: CameraComponentParsedOptions) -> Result<Camera, CameraError> {
-        guard let camera = Camera(session: session, options: options) else {
-            return .failure(.cameraComponentError(reason: .failedToComposeCamera))
+    func createCameraView(options: CameraComponentParsedOptions) -> Result<CameraView, CameraError> {
+        let videoInputResult = createVideoInput(options: options)
+        switch videoInputResult {
+        case .success(let videoInput):
+            let audioInputResult = createAudioInput(options: options)
+            switch audioInputResult {
+            case .success(let audioInput):
+                let videoLayerResult = createVideoPreviewLayer(options: options, videoDevice: videoInput)
+                switch videoLayerResult {
+                case .success(let videoLayer):
+                    let cameraResult = createCamera(options: options,
+                                                    videoInput: videoInput,
+                                                    audioInput: audioInput,
+                                                    videoLayer: videoLayer)
+                    switch cameraResult {
+                    case .success(let camera):
+                        return .success(CameraView(camera: camera))
+                    case .failure(let error):
+                        return .failure(error)
+                    }
+                case .failure(let error):
+                    return .failure(error)
+                }
+            case .failure(let error):
+                return .failure(error)
+            }
+        case .failure(let error):
+            return .failure(error)
         }
-        return .success(camera)
-    }
-}
-
-// MARK: - Notifications
-extension SessionComposer {
-    func addObservers() {
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(sessionRuntimeError),
-                                               name: .AVCaptureSessionRuntimeError,
-                                               object: session)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(sessionWasInterrupted),
-                                               name: .AVCaptureSessionWasInterrupted,
-                                               object: session)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(sessionInterruptionEnded),
-                                               name: .AVCaptureSessionInterruptionEnded,
-                                               object: session)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(sessionDidStartRunning),
-                                               name: .AVCaptureSessionDidStartRunning,
-                                               object: session)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(sessionDidStopRunning),
-                                               name: .AVCaptureSessionDidStopRunning,
-                                               object: session)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(deviceSubjectAreaDidChange),
-                                               name: .AVCaptureDeviceSubjectAreaDidChange,
-                                               object: session)
     }
     
-    func removeObservers() {
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    @objc private func sessionRuntimeError(notification: NSNotification) {
-        guard let error = notification.userInfo?[AVCaptureSessionErrorKey] as? AVError else { return }
-        let cameraError = CameraError.cameraSessionError(reason: .runtimeError(error))
-        delegate?.sessionComposer(self,
-                                  didReceiveRuntimeError: cameraError,
-                                  shouldRestartCamera: error.code == .mediaServicesWereReset)
-    }
-    
-    @objc private func sessionDidStartRunning(notification: NSNotification) {
-        delegate?.sessionComposerDidStartCameraSession(self)
-    }
-    
-    @objc private func sessionDidStopRunning(notification: NSNotification) {
-        delegate?.sessionComposerDidStopCameraSession(self)
-    }
-    
-    /// This will be called anytime there is another app that tries to use the audio or video devices
-    /// Removing that device will unfreeze the camera but video will be corrupted (couldn't find a reason yet)
-    @objc private func sessionWasInterrupted(notification: NSNotification) {
-        guard let userInfoValue = notification.userInfo?[AVCaptureSessionInterruptionReasonKey] as AnyObject?,
-              let reasonIntegerValue = userInfoValue.integerValue,
-              let reason = AVCaptureSession.InterruptionReason(rawValue: reasonIntegerValue) else { return }
-        var interruptionReason: SessionInterruptionReason
-        switch reason {
-        case .videoDeviceNotAvailableInBackground:
-            interruptionReason = .videoDeviceNotAvailableInBackground
-        case .audioDeviceInUseByAnotherClient:
-            interruptionReason = .audioDeviceInUseByAnotherClient
-        case .videoDeviceInUseByAnotherClient:
-            interruptionReason = .videoDeviceInUseByAnotherClient
-        case .videoDeviceNotAvailableWithMultipleForegroundApps:
-            interruptionReason = .videoDeviceNotAvailableWithMultipleForegroundApps
-        case .videoDeviceNotAvailableDueToSystemPressure:
-            interruptionReason = .videoDeviceNotAvailableDueToSystemPressure
-        @unknown default:
-            interruptionReason = .unknown
+    func createPhotoCameraView(options: CameraComponentParsedOptions) -> Result<PhotoCameraView, CameraError> {
+        let videoInputResult = createVideoInput(options: options)
+        switch videoInputResult {
+        case .success(let videoInput):
+                let videoLayerResult = createVideoPreviewLayer(options: options, videoDevice: videoInput)
+                switch videoLayerResult {
+                case .success(let videoLayer):
+                    let photoCameraResult = createPhotoCamera(options: options,
+                                                              videoInput: videoInput,
+                                                              videoLayer: videoLayer)
+                    switch photoCameraResult {
+                    case .success(let photoCamera):
+                        return .success(PhotoCameraView(photoCamera: photoCamera))
+                    case .failure(let error):
+                        return .failure(error)
+                    }
+            case .failure(let error):
+                return .failure(error)
+            }
+        case .failure(let error):
+            return .failure(error)
         }
-        delegate?.sessionComposer(self, didReceiveSessionInterruption: interruptionReason)
     }
     
-    /// This will be called anytime the problem with the session was solved
-    /// Entering in this method dosen't necessarly means that the call or the other application that invoked the problem was closed
-    @objc private func sessionInterruptionEnded(notification: NSNotification) {
-        delegate?.sessionComposerDidFinishSessionInterruption(self)
+    func createVideoCameraView(options: CameraComponentParsedOptions) -> Result<VideoCameraView, CameraError> {
+        let videoInputResult = createVideoInput(options: options)
+        switch videoInputResult {
+        case .success(let videoInput):
+            let audioInputResult = createAudioInput(options: options)
+            switch audioInputResult {
+            case .success(let audioInput):
+                let videoLayerResult = createVideoPreviewLayer(options: options, videoDevice: videoInput)
+                switch videoLayerResult {
+                case .success(let videoLayer):
+                    let videoCameraResult = createVideoCamera(options: options,
+                                                              videoInput: videoInput,
+                                                              audioInput: audioInput,
+                                                              videoLayer: videoLayer)
+                    switch videoCameraResult {
+                    case .success(let videoCamera):
+                        return .success(VideoCameraView(videoCamera: videoCamera))
+                    case .failure(let error):
+                        return .failure(error)
+                    }
+                case .failure(let error):
+                    return .failure(error)
+                }
+            case .failure(let error):
+                return .failure(error)
+            }
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
-    @objc private func deviceSubjectAreaDidChange(notification: NSNotification) {
-        delegate?.sessionComposerDidChangeDeviceAreaOfInterest(self)
+    private func createCamera(options: CameraComponentParsedOptions,
+                              videoInput: VideoCaptureDevice,
+                              audioInput: AudioCaptureDevice,
+                              videoLayer: PreviewLayer) -> Result<Camera, CameraError> {
+        let movieCapturerResult = createMovieCapturer(options: options,
+                                                      videoDevice: videoInput,
+                                                      audioDevice: audioInput)
+        switch movieCapturerResult {
+        case .success(let movieCapturer):
+            let photoCapturerResult = createPhotoCapturer(options: options, videoDevice: videoInput)
+            switch photoCapturerResult {
+            case .success(let photoCapturer):
+                return .success(Camera(session: session,
+                                       videoInput: videoInput,
+                                       videoLayer: videoLayer,
+                                       photoCapturer: photoCapturer,
+                                       movieCapturer: movieCapturer,
+                                       options: options))
+            case .failure(let error):
+                return .failure(error)
+            }
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+    
+    private func createVideoCamera(options: CameraComponentParsedOptions,
+                                   videoInput: VideoCaptureDevice,
+                                   audioInput: AudioCaptureDevice,
+                                   videoLayer: PreviewLayer) -> Result<VideoCamera, CameraError> {
+        let movieCapturerResult = createMovieCapturer(options: options,
+                                                      videoDevice: videoInput,
+                                                      audioDevice: audioInput)
+        switch movieCapturerResult {
+        case .success(let movieCapturer):
+            return .success(VideoCamera(session: session,
+                                        videoInput: videoInput,
+                                        videoLayer: videoLayer,
+                                        movieCapturer: movieCapturer,
+                                        options: options))
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+    
+    private func createPhotoCamera(options: CameraComponentParsedOptions,
+                                   videoInput: VideoCaptureDevice,
+                                   videoLayer: PreviewLayer) -> Result<PhotoCamera, CameraError> {
+        let photoCapturerResult = createPhotoCapturer(options: options, videoDevice: videoInput)
+        switch photoCapturerResult {
+        case .success(let photoCapturer):
+            return .success(PhotoCamera(session: session,
+                                        videoInput: videoInput,
+                                        videoLayer: videoLayer,
+                                        photoCapturer: photoCapturer,
+                                        options: options))
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+    
+    private func createBaseCamera(options: CameraComponentParsedOptions) -> Result<BaseCamera, CameraError> {
+        let videoInputResult = createVideoInput(options: options)
+        switch videoInputResult {
+        case .success(let videoInput):
+            let videoLayerResult = createVideoPreviewLayer(options: options, videoDevice: videoInput)
+            switch videoLayerResult {
+            case .success(let videoLayer):
+                return .success(BaseCamera(session: session,
+                                           videoInput: videoInput,
+                                           videoLayer: videoLayer,
+                                           options: options))
+            case .failure(let error):
+                return .failure(error)
+            }
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+    
+    private func createVideoInput(options: CameraComponentParsedOptions) -> Result<VideoCaptureDevice, CameraError> {
+        guard let videoInput = VideoCaptureDevice(session: session,
+                                                  options: options) else {
+            return .failure(.cameraComponentError(reason: .failedToConfigureVideoDevice))
+        }
+        return .success(videoInput)
+    }
+    
+    private func createAudioInput(options: CameraComponentParsedOptions) -> Result<AudioCaptureDevice, CameraError> {
+        guard let audioInput = AudioCaptureDevice(session: session,
+                                                  options: options) else {
+            return .failure(.cameraComponentError(reason: .failedToConfigureAudioDevice))
+        }
+        return .success(audioInput)
+    }
+    
+    private func createPhotoCapturer(options: CameraComponentParsedOptions,
+                                     videoDevice: VideoCaptureDevice) -> Result<PhotoOutput, CameraError> {
+        guard let photoCapturer = PhotoOutput(session: session,
+                                              options: options,
+                                              videoDevice: videoDevice) else {
+            return .failure(.cameraComponentError(reason: .failedToAddPhotoOutput))
+        }
+        return .success(photoCapturer)
+    }
+    
+    private func createMovieCapturer(options: CameraComponentParsedOptions,
+                                     videoDevice: VideoCaptureDevice,
+                                     audioDevice: AudioCaptureDevice) -> Result<MovieOutput, CameraError> {
+        guard let movieCapturer = MovieOutput(forSession: session,
+                                              andOptions: options,
+                                              videoDevice: videoDevice,
+                                              audioDevice: audioDevice) else {
+            return .failure(.cameraComponentError(reason: .failedToAddMovieOutput))
+        }
+        return .success(movieCapturer)
+    }
+    
+    private func createVideoPreviewLayer(options: CameraComponentParsedOptions,
+                                         videoDevice: VideoCaptureDevice) -> Result<PreviewLayer, CameraError> {
+        guard let videoLayer = PreviewLayer(session: session,
+                                            options: options,
+                                            videoDevice: videoDevice) else {
+            return .failure(.cameraComponentError(reason: .failedToAddPreviewLayer))
+        }
+        return .success(videoLayer)
     }
 }

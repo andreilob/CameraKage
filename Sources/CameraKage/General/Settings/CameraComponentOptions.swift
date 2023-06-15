@@ -5,7 +5,7 @@
 //  Created by Lobont Andrei on 11.05.2023.
 //
 
-import AVFoundation
+import Foundation
 
 public typealias CameraComponentOptions = [CameraComponentOptionItem]
 
@@ -13,15 +13,15 @@ public enum CameraComponentOptionItem {
     /// Quality prioritization mode for the photo output.
     /// Constants indicating how photo quality should be prioritized against speed.
     /// Default is `.balanced`.
-    case photoQualityPrioritizationMode(AVCapturePhotoOutput.QualityPrioritization)
+    case photoQualityPrioritizationMode(PhotoQualityPrioritizationMode)
     
     /// The mode of the video stabilization.
     /// Default is `.auto`.
-    case videoStabilizationMode(AVCaptureVideoStabilizationMode)
+    case videoStabilizationMode(VideoStabilizationMode)
     
     /// The orientation setting of the camera.
     /// Default is `.portrait`.
-    case cameraOrientation(AVCaptureVideoOrientation)
+    case cameraOrientation(VideoOrientationMode)
     
     /// The type of camera to be used.
     /// Default is `.backWideCamera`.
@@ -33,41 +33,42 @@ public enum CameraComponentOptionItem {
     
     /// Will define how the layer will display the player's visual content.
     /// Default is `.resizeAspectFill`.
-    case videoGravity(AVLayerVideoGravity)
+    case videoGravity(LayerVideoGravity)
     
-    /// Maximum duration allowed for video recordings.
-    /// Default is `.positiveInfinity`.
-    case maxVideoDuration(CMTime)
+    /// Maximum duration allowed for video recordings represented in seconds.
+    /// Default is `.infinity`.
+    case maxVideoDuration(Double)
     
-    /// Indicates if the `CameraComponent` has pinch to zoom.
-    /// Each `CameraComponent` can have its own zoom setting.
+    /// Indicates if the camera has pinch to zoom.
     /// Default is `false`.
     case pinchToZoomEnabled(Bool)
     
-    /// The minimum zoom scale of the `CameraComponent`.
-    /// Each `CameraComponent` can have its own minimum scale.
+    /// The minimum zoom scale of the camera.
     /// Default is `1.0`.
     case minimumZoomScale(CGFloat)
     
-    /// The maximum zoom scale of the `CameraComponent`.
-    /// Each `CameraComponent` can have its own maximum scale.
+    /// The maximum zoom scale of the camera.
     /// Default is `5.0`.
     case maximumZoomScale(CGFloat)
+    
+    /// The queue that will be used to notify delegate events.
+    /// Default is `.main`.
+    case delegateQueue(DispatchQueue)
 }
 
-/// Options used for the output settings of the camera component.
-/// These should be set before the `startCameraSession()` is called.
+/// Options used to configure a camera view.
 public class CameraComponentParsedOptions {
-    public var photoQualityPrioritizationMode: AVCapturePhotoOutput.QualityPrioritization = .balanced
-    public var videoStabilizationMode: AVCaptureVideoStabilizationMode = .auto
-    public var cameraOrientation: AVCaptureVideoOrientation = .portrait
+    public var photoQualityPrioritizationMode: PhotoQualityPrioritizationMode = .balanced
+    public var videoStabilizationMode: VideoStabilizationMode = .auto
+    public var cameraOrientation: VideoOrientationMode = .portrait
     public var cameraDevice: CameraDevice = .backWideCamera
     public var flipCameraDevice: CameraDevice = .frontCamera
-    public var videoGravity: AVLayerVideoGravity = .resizeAspectFill
-    public var maxVideoDuration: CMTime = .positiveInfinity
+    public var videoGravity: LayerVideoGravity = .resizeAspectFill
+    public var maxVideoDuration: Double = .infinity
     public var pinchToZoomEnabled: Bool = false
     public var minimumZoomScale: CGFloat = 1.0
     public var maximumZoomScale: CGFloat = 5.0
+    public var delegateQeueue: DispatchQueue = .main
     
     public init(_ options: CameraComponentOptions?) {
         guard let options else { return }
@@ -93,6 +94,8 @@ public class CameraComponentParsedOptions {
                 self.minimumZoomScale = minimumZoomScale
             case .maximumZoomScale(let maximumZoomScale):
                 self.maximumZoomScale = maximumZoomScale
+            case .delegateQueue(let delegateQueue):
+                self.delegateQeueue = delegateQueue
             }
         }
     }
