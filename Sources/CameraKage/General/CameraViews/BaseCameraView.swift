@@ -85,9 +85,9 @@ public class BaseCameraView: UIView {
                 }
                 self.baseCamera.startCameraSession()
             } catch let error as CameraError {
-                invokeDelegates { $0.cameraDidEncounterError(error: error) }
+                self.invokeDelegates { $0.cameraDidEncounterError(error: error) }
             } catch {
-                invokeDelegates { $0.cameraDidEncounterError(error: .cameraComponentError(reason: .failedToLockDevice)) }
+                self.invokeDelegates { $0.cameraDidEncounterError(error: .cameraComponentError(reason: .failedToLockDevice)) }
             }
         }
     }
