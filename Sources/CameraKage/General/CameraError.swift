@@ -21,6 +21,9 @@ public enum CameraError: Error {
         /// Movie output couldn't be added to the session.
         case failedToAddMovieOutput
         
+        /// Metadata output couldn't be added to the session.
+        case failedToAddMetadataOutput
+        
         /// The preview layer wasn't connected to the camera session.
         case failedToAddPreviewLayer
         

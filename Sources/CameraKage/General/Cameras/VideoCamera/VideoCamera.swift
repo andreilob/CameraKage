@@ -7,7 +7,7 @@
 
 import Foundation
 
-class VideoCamera: BaseCamera, VideoCameraInterface {
+class VideoCamera: InteractableCamera, VideoCameraInterface {
     private var movieCapturer: MovieCapturer
     
     var isRecording: Bool { movieCapturer.isRecording }

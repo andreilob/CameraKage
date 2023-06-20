@@ -8,7 +8,7 @@
 import Foundation
 
 /// View capable of both video recordings and photo captures.
-public class CameraView: BaseCameraView {
+public class CameraView: InteractableCameraView {
     private var camera: CameraInterface
     
     /// Determines if the camera has a video recording in progress.
@@ -16,7 +16,7 @@ public class CameraView: BaseCameraView {
     
     init(camera: CameraInterface) {
         self.camera = camera
-        super.init(baseCamera: camera)
+        super.init(interactableCamera: camera)
         setupPhotoCapturer()
         setupVideoCapturer()
     }

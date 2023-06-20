@@ -8,7 +8,7 @@
 import Foundation
 
 /// Delegate protocol used by the `PhotoCameraView`.
-public protocol PhotoCameraDelegate: BaseCameraDelegate {
+public protocol PhotoCameraDelegate: InteractableCameraDelegate {
     /**
      Called when the camera has outputted a photo.
      

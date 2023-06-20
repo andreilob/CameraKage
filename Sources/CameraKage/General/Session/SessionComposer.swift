@@ -14,6 +14,32 @@ final class SessionComposer {
         self.session = session
     }
     
+    func createMetadataCameraView(options: CameraComponentParsedOptions,
+                                  metadataTypes: [MetadataType]) -> Result<MetadataCameraView, CameraError> {
+        let videoInputResult = createVideoInput(options: options)
+        switch videoInputResult {
+        case .success(let videoInput):
+            let videoLayerResult = createVideoPreviewLayer(options: options, videoDevice: videoInput)
+            switch videoLayerResult {
+            case .success(let videoLayer):
+                let metadataCameraResult = createMetadataCamera(options: options,
+                                                                metadataTypes: metadataTypes,
+                                                                videoInput: videoInput,
+                                                                videoLayer: videoLayer)
+                switch metadataCameraResult {
+                case .success(let metadataCamera):
+                    return .success(MetadataCameraView(metadataCamera: metadataCamera))
+                case .failure(let error):
+                    return .failure(error)
+                }
+            case .failure(let error):
+                return .failure(error)
+            }
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+    
     func createCameraView(options: CameraComponentParsedOptions) -> Result<CameraView, CameraError> {
         let videoInputResult = createVideoInput(options: options)
         switch videoInputResult {
@@ -49,18 +75,18 @@ final class SessionComposer {
         let videoInputResult = createVideoInput(options: options)
         switch videoInputResult {
         case .success(let videoInput):
-                let videoLayerResult = createVideoPreviewLayer(options: options, videoDevice: videoInput)
-                switch videoLayerResult {
-                case .success(let videoLayer):
-                    let photoCameraResult = createPhotoCamera(options: options,
-                                                              videoInput: videoInput,
-                                                              videoLayer: videoLayer)
-                    switch photoCameraResult {
-                    case .success(let photoCamera):
-                        return .success(PhotoCameraView(photoCamera: photoCamera))
-                    case .failure(let error):
-                        return .failure(error)
-                    }
+            let videoLayerResult = createVideoPreviewLayer(options: options, videoDevice: videoInput)
+            switch videoLayerResult {
+            case .success(let videoLayer):
+                let photoCameraResult = createPhotoCamera(options: options,
+                                                          videoInput: videoInput,
+                                                          videoLayer: videoLayer)
+                switch photoCameraResult {
+                case .success(let photoCamera):
+                    return .success(PhotoCameraView(photoCamera: photoCamera))
+                case .failure(let error):
+                    return .failure(error)
+                }
             case .failure(let error):
                 return .failure(error)
             }
@@ -161,17 +187,34 @@ final class SessionComposer {
         }
     }
     
-    private func createBaseCamera(options: CameraComponentParsedOptions) -> Result<BaseCamera, CameraError> {
+    private func createMetadataCamera(options: CameraComponentParsedOptions,
+                                      metadataTypes: [MetadataType],
+                                      videoInput: VideoCaptureDevice,
+                                      videoLayer: PreviewLayer) -> Result<MetadataCamera, CameraError> {
+        let metadataCapturerResult = createMetadataCapturer(metadataTypes: metadataTypes)
+        switch metadataCapturerResult {
+        case .success(let metadataCapturer):
+            return .success(MetadataCamera(session: session,
+                                           videoInput: videoInput,
+                                           videoLayer: videoLayer,
+                                           metadataCapturer: metadataCapturer,
+                                           options: options))
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+    
+    private func createBaseCamera(options: CameraComponentParsedOptions) -> Result<InteractableCamera, CameraError> {
         let videoInputResult = createVideoInput(options: options)
         switch videoInputResult {
         case .success(let videoInput):
             let videoLayerResult = createVideoPreviewLayer(options: options, videoDevice: videoInput)
             switch videoLayerResult {
             case .success(let videoLayer):
-                return .success(BaseCamera(session: session,
-                                           videoInput: videoInput,
-                                           videoLayer: videoLayer,
-                                           options: options))
+                return .success(InteractableCamera(session: session,
+                                                   videoInput: videoInput,
+                                                   videoLayer: videoLayer,
+                                                   options: options))
             case .failure(let error):
                 return .failure(error)
             }
@@ -216,6 +259,13 @@ final class SessionComposer {
             return .failure(.cameraComponentError(reason: .failedToAddMovieOutput))
         }
         return .success(movieCapturer)
+    }
+    
+    private func createMetadataCapturer(metadataTypes: [MetadataType]) -> Result<MetadataOutput, CameraError> {
+        guard let metadataCapturer = MetadataOutput(session: session, metadataTypes: metadataTypes) else {
+            return .failure(.cameraComponentError(reason: .failedToAddMetadataOutput))
+        }
+        return .success(metadataCapturer)
     }
     
     private func createVideoPreviewLayer(options: CameraComponentParsedOptions,

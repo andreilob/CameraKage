@@ -21,6 +21,7 @@ CameraKage is a fully customizable, pure Swift, plug-and-play camera view.
 - [x] Premission handling.
 - [x] Delegate notifications.
 - [x] Photo and video capture.
+- [x] Metadata camera scanner (QR, barcodes, etc.)
 - [x] Camera flipping.
 - [x] Adjustments for exposure and focus of the camera.
 - [x] Capture session error and interruptions notifiers.
@@ -144,6 +145,16 @@ And also there are the camera specific delegate methods:
      - parameter url: The URL of the video file location.
      */
     func cameraDidFinishVideoRecording(atFileURL url: URL)
+```
+
+### Metadata Camera
+```swift
+    /**
+     Called when there was a successful metadata scan for the specified metadata types.
+     
+     - parameter metadata: An array representing all the metadata that was detected.
+     */
+    func cameraDidScanMetadataInfo(metadata: [MetadataScanOutput])
 ```
 
 ### Requirements

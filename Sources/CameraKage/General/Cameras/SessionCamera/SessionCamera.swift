@@ -1,23 +1,21 @@
 //
-//  BaseCamera.swift
+//  SessionCamera.swift
 //  
 //
-//  Created by Lobont Andrei on 30.05.2023.
+//  Created by Lobont Andrei on 16.06.2023.
 //
 
 import Foundation
 import QuartzCore.CALayer
 
-class BaseCamera: BaseCameraInterface {
-    private let videoInput: VideoInput
-    private let options: CameraComponentParsedOptions
-    
+class SessionCamera: SessionCameraInterface {
     var session: Session
+    let videoInput: VideoInput
     let videoLayer: VideoLayer
-    var isZoomAllowed: Bool { options.pinchToZoomEnabled }
+    let options: CameraComponentParsedOptions
+    
     var delegateQueue: DispatchQueue { options.delegateQeueue }
     var isSessionRunning: Bool { session.isRunning }
-    var maxZoomScale: CGFloat { options.maximumZoomScale }
     
     init(session: Session,
          videoInput: VideoInput,
@@ -45,41 +43,6 @@ class BaseCamera: BaseCameraInterface {
     
     func setSessionDelegate(_ delegate: SessionDelegate) {
         session.delegate = delegate
-    }
-    
-    func flipCamera() throws {
-        do {
-            try videoInput.flip()
-        } catch let error {
-            throw error
-        }
-    }
-    
-    func focus(with focusMode: FocusMode,
-               exposureMode: ExposureMode,
-               at devicePoint: CGPoint,
-               monitorSubjectAreaChange: Bool) throws {
-        do {
-            let point = videoLayer.captureDevicePointConverted(fromLayerPoint: devicePoint)
-            try videoInput.focus(focusMode: focusMode,
-                                 exposureMode: exposureMode,
-                                 point: point,
-                                 monitorSubjectAreaChange: monitorSubjectAreaChange)
-        } catch let error {
-            throw error
-        }
-    }
-    
-    func zoom(atScale scale: CGFloat) throws {
-        do {
-            try videoInput.zoom(atScale: scale)
-        } catch let error {
-            throw error
-        }
-    }
-    
-    func minMaxZoom(_ factor: CGFloat) -> CGFloat {
-        videoInput.minMaxZoom(factor, options: options)
     }
     
     func configureFlash(_ flashMode: FlashMode) throws {

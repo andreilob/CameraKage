@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol VideoCameraInterface: BaseCameraInterface {
+protocol VideoCameraInterface: InteractableCameraInterface {
     var isRecording: Bool { get }
     var onMovieCaptureSuccess: ((URL) -> Void)? { get set }
     var onMovieCaptureStart: ((URL) -> Void)? { get set }

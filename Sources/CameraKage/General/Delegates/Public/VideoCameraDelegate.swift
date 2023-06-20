@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol VideoCameraDelegate: BaseCameraDelegate {
+public protocol VideoCameraDelegate: InteractableCameraDelegate {
     /**
      Called when the camera has started a video recording.
      

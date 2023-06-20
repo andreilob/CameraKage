@@ -7,7 +7,7 @@
 
 import Foundation
 
-class PhotoCamera: BaseCamera, PhotoCameraInterface {
+class PhotoCamera: InteractableCamera, PhotoCameraInterface {
     private var photoCapturer: PhotoCapturer
     
     var onPhotoCaptureSuccess: ((Data) -> Void)? {

@@ -7,4 +7,4 @@
 
 import Foundation
 
-protocol CameraInterface: BaseCameraInterface & PhotoCameraInterface & VideoCameraInterface {}
+protocol CameraInterface: InteractableCameraInterface & PhotoCameraInterface & VideoCameraInterface {}

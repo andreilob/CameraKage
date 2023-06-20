@@ -12,9 +12,9 @@ class VideoInputMock: VideoInput {
     private let options: CameraComponentParsedOptions
     var onVideoDeviceError: ((CameraError) -> Void)?
     var zoomLevel = 1.0
-    var flashMode: FlashMode = .off
-    var focusMode: FocusMode = .autoFocus
-    var exposureMode: ExposureMode = .autoExpose
+    var flashMode: FlashMode?
+    var focusMode: FocusMode?
+    var exposureMode: ExposureMode?
     var focusPoint: CGPoint = .zero
     var isFlipped = false
     var currentCamera: CameraDevice {

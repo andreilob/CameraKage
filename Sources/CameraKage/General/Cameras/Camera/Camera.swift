@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Camera: BaseCamera, CameraInterface {
+class Camera: InteractableCamera, CameraInterface {
     private var photoCapturer: PhotoCapturer
     private var movieCapturer: MovieCapturer
     

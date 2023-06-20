@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol PhotoCameraInterface: BaseCameraInterface {
+protocol PhotoCameraInterface: InteractableCameraInterface {
     var onPhotoCaptureSuccess: ((Data) -> Void)? { get set }
     var onPhotoCaptureError: ((CameraError) -> Void)? { get set }
     

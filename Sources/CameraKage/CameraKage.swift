@@ -42,6 +42,19 @@ public class CameraKage: UIView {
     }
     
     /**
+     Create a view with a metadata camera integrated, capable of detcting and decoding different code types visible to the camera.
+     
+     - parameter options: The options used in the camera setup.
+     - parameter metadataTypes: An array containing the metadata types that the camera should decode.
+     
+     - returns: Returns a result containing either the camera view or an error that might have occured in the camera setup process.
+     */
+    public func createMetadataCameraView(with options: CameraComponentParsedOptions = CameraComponentParsedOptions(nil),
+                                         metadataTypes: [MetadataType]) -> Result<MetadataCameraView, CameraError> {
+        sessionComposer.createMetadataCameraView(options: options, metadataTypes: metadataTypes)
+    }
+    
+    /**
      Prompts the user with the system alert to grant permission for the camera usage.
      
      - returns: Returns asynchronously a `Bool` specifying if the access was granted or not.

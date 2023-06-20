@@ -1,21 +1,13 @@
 //
-//  BaseCameraDelegate.swift
+//  SessionCameraDelegate.swift
 //  
 //
-//  Created by Lobont Andrei on 05.06.2023.
+//  Created by Lobont Andrei on 18.06.2023.
 //
 
 import Foundation
 
-public protocol BaseCameraDelegate: AnyObject {
-    /**
-     Called when a pinch to zoom action happened on the camera.
-     
-     - parameter scale: The current zoom scale reported by the pinch gesture.
-     - parameter maxScale: The maximum zoom scale of the camera.
-     */
-    func cameraDidZoom(atScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat)
-    
+public protocol SessionCameraDelegate: AnyObject {
     /**
      Called when the camera encountered an error.
      
@@ -53,8 +45,7 @@ public protocol BaseCameraDelegate: AnyObject {
     func cameraDidChangeDeviceAreaOfInterest()
 }
 
-public extension BaseCameraDelegate {
-    func cameraDidZoom(atScale scale: CGFloat, outOfMaximumScale maxScale: CGFloat) {}
+public extension SessionCameraDelegate {
     func cameraDidEncounterError(error: CameraError) {}
     func cameraDidReceiveSessionInterruption(withReason reason: SessionInterruptionReason) {}
     func cameraDidFinishSessionInterruption() {}

@@ -8,12 +8,12 @@
 import Foundation
 
 /// View capable only of photo captures.
-public class PhotoCameraView: BaseCameraView {
+public class PhotoCameraView: InteractableCameraView {
     private var photoCamera: PhotoCameraInterface
     
     init(photoCamera: PhotoCameraInterface) {
         self.photoCamera = photoCamera
-        super.init(baseCamera: photoCamera)
+        super.init(interactableCamera: photoCamera)
         setupPhotoCapturer()
     }
     

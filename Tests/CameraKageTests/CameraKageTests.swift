@@ -57,6 +57,8 @@ extension CameraKageTests {
     }
     
     func createPermisssionsManagerMock() -> PermissionManagerMock {
-        PermissionManagerMock()
+        let mock = PermissionManagerMock()
+        trackMemoryLeaks(mock)
+        return mock
     }
 }
