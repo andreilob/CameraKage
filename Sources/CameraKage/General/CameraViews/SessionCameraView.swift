@@ -37,7 +37,7 @@ public class SessionCameraView: UIView {
     }
     
     /**
-     Starts the camera session..
+     Starts the camera session.
      */
     public func startCamera() {
         sessionQueue.async { [weak self] in

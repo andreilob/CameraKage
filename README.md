@@ -15,19 +15,20 @@
 CameraKage is a fully customizable, pure Swift, plug-and-play camera view.
 </p>
 
-## Functionalities
+# Functionalities
 
 - [x] Fully customizable and composable camera views.
+- [x] Photo and video capture.
+- [x] AR camera capable of loading face masks and capturing content with them.
+- [x] Metadata camera scanner. (QR, barcodes, etc.)
 - [x] Premission handling.
 - [x] Delegate notifications.
-- [x] Photo and video capture.
-- [x] Metadata camera scanner (QR, barcodes, etc.)
 - [x] Camera flipping.
 - [x] Adjustments for exposure and focus of the camera.
 - [x] Capture session error and interruptions notifiers.
 - [x] Flash usage for both photo and video.
 
-### CameraKage Setup
+## CameraKage Basic Setup
 
 Start setting up CameraKage by importing the package and creating a main module instance.
 
@@ -68,7 +69,34 @@ cameraView.startCamera()
 ```
 With these steps you should have you camera up an running, what's left is just to call the capturePhoto or startVideoRecording methods.
 
-### CameraKage Delegate
+## AR Camera Setup
+
+CameraKage has the option to create an AR camera capable of loading masks onto the face of users and capture content with them.
+To use the AR camera you firstly have to import 3D models of the masks into the bundle of your application.
+
+After you have the 3D models you can start by initializing the CameraKage module and creating the ARCameraView and add it to your ViewController.
+
+```swift
+import CameraKage
+
+let cameraKage = CameraKage()
+let arCameraView = cameraKage.cameraKage.createARCameraView()
+// Register the delegate to receive info from the camera.
+arCameraView.registerDelegate(self)
+// Add the camera to the view and constraint it.
+view.addSubview(arCameraView)
+// Then just start the camera:
+arCameraView.startCamera()
+```
+
+Now having the basic setup, you can start capturing content and loading masks.
+To load masks you just have to call the loadARMask method:
+```swift
+// don't use . in front of the extension
+arCameraView.loadARMask(name: "maskName", fileType: "maskExtension")
+```
+
+## CameraKage Delegates
 
 CameraKage provides a handful of useful notifications regarding the camera and the on-going camera session:
 
@@ -155,6 +183,49 @@ And also there are the camera specific delegate methods:
      - parameter metadata: An array representing all the metadata that was detected.
      */
     func cameraDidScanMetadataInfo(metadata: [MetadataScanOutput])
+```
+
+### AR Camera
+```swift
+    /**
+     Called when the AR camera has outputted a photo.
+     
+     - parameter data: The data representation of the photo.
+     */
+    func arCamera(didCapturePhotoWithData data: Data)
+    
+    /**
+     Called when the AR camera has started a video recording.
+     
+     - parameter url: The URL file location where the video is being recorded.
+     */
+    func arCamera(didBeginRecordingVideoAtURL url: URL)
+    
+    /**
+     Called when the camera has outputted a video recording.
+     
+     - parameter url: The URL of the video file location.
+     */
+    func arCamera(didRecordVideoAtURL url: URL)
+    
+    /**
+     Called when the AR camera encountered an error.
+     
+     - parameter error: The error that was encountered.
+     */
+    func arCamera(didFailWithError error: ARCameraError)
+    
+    /**
+     Called when the camera session was interrupted. This can happen from various reason but most common ones would be phone calls while using the camera, other apps taking control over the phone camera or app moving to background.
+     
+     - important: When this is called, the camera will freezee so some UI overlay might be necessary on the client side.
+     */
+    func arCameraWasInterrupted()
+    
+    /**
+     Called when the camera session interruption has ended. When this is called the camera will resume working.
+     */
+    func arCameraInterruptionEnded()
 ```
 
 ### Requirements

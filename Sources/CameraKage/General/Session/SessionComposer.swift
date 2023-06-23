@@ -14,6 +14,11 @@ final class SessionComposer {
         self.session = session
     }
     
+    func createARCameraView(options: ARCameraComponentParsedOptions) -> ARCameraView {
+        let arCamera = createARCamera(options: options)
+        return ARCameraView(arCamera: arCamera)
+    }
+    
     func createMetadataCameraView(options: CameraComponentParsedOptions,
                                   metadataTypes: [MetadataType]) -> Result<MetadataCameraView, CameraError> {
         let videoInputResult = createVideoInput(options: options)
@@ -125,6 +130,17 @@ final class SessionComposer {
             return .failure(error)
         }
     }
+}
+
+// MARK: - Camera Creation
+extension SessionComposer {
+    private func createARCamera(options: ARCameraComponentParsedOptions) -> ARCamera {
+        let arPreviewView = createARPreviewView(options: options)
+        let assetWriter = createARAssetWrite(arView: arPreviewView)
+        return ARCamera(arPreviewView: arPreviewView,
+                        assetWriter: assetWriter,
+                        options: options)
+    }
     
     private func createCamera(options: CameraComponentParsedOptions,
                               videoInput: VideoCaptureDevice,
@@ -221,6 +237,17 @@ final class SessionComposer {
         case .failure(let error):
             return .failure(error)
         }
+    }
+}
+
+// MARK: - Device Creation
+extension SessionComposer {
+    private func createARPreviewView(options: ARCameraComponentParsedOptions) -> ARPreviewView {
+        ARPreviewView(options: options)
+    }
+    
+    private func createARAssetWrite(arView: ARPreviewView) -> ARAssetWriter {
+        ARAssetWriter(arView: arView)
     }
     
     private func createVideoInput(options: CameraComponentParsedOptions) -> Result<VideoCaptureDevice, CameraError> {

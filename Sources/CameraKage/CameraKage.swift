@@ -55,6 +55,17 @@ public class CameraKage: UIView {
     }
     
     /**
+     Create a view with an AR camera integrated, capable of adding 3D face masks and capturing content with them.
+     
+     - parameter options: The options used in the camera setup.
+     
+     - returns: Returns the ARCameraView.
+     */
+    public func createARCameraView(options: ARCameraComponentParsedOptions = ARCameraComponentParsedOptions(nil)) -> ARCameraView {
+        sessionComposer.createARCameraView(options: options)
+    }
+    
+    /**
      Prompts the user with the system alert to grant permission for the camera usage.
      
      - returns: Returns asynchronously a `Bool` specifying if the access was granted or not.
