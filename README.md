@@ -5,7 +5,7 @@
 <p align="center">
 <a href="https://github.com/andreilob/CameraKage/actions/workflows/builder.yml?query=workflows+Swift"><img src="https://img.shields.io/github/actions/workflow/status/andreilob/CameraKage/builder.yml"></a>
 <a href="https://swift.org/package-manager/"><img src="https://img.shields.io/badge/SPM-Supported-red"></a>
-<a href="https://www.swift.org/blog/swift-5.5-released/"><img src="https://img.shields.io/badge/Swift-5.5-green"></a>
+<a href="https://swiftpackageindex.com/andreilob/CameraKage"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fandreilob%2FCameraKage%2Fbadge%3Ftype%3Dswift-versions"></a>
 <a href="https://support.apple.com/en-us/HT212788"><img src="https://img.shields.io/badge/iOS-15%2B-informational"></a>               
 <a href="https://raw.githubusercontent.com/andreilob/CameraKage/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-black"></a>
 <a href="https://github.com/andreilob/CameraKage/releases/tag/1.1.0"><img src="https://img.shields.io/badge/Version-1.1.1-informational"></a>         
