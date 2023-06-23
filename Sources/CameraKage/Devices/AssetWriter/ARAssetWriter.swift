@@ -67,7 +67,7 @@ class ARAssetWriter: AssetWriterInterface {
             self.assetWriter = assetWriter
             
             self.createVideoAssetWriterInput(assetWriter: assetWriter)
-            guard let writerVideoInput else { return }
+            guard let writerVideoInput = self.writerVideoInput else { return }
             self.createPixelBufferAdapter(writerVideoInput: writerVideoInput)
             self.createAudioAssetWriterInput(assetWriter: assetWriter)
             
