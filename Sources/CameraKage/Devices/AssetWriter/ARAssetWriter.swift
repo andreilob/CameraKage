@@ -57,7 +57,7 @@ class ARAssetWriter: AssetWriterInterface {
     
     func startVideoRecording() {
         recordQueue.async { [weak self] in
-            guard let self, !isRecording else { return }
+            guard let self, !self.isRecording else { return }
             try? FileManager.default.removeItem(at: RecordSettings.fileUrl)
             guard let assetWriter = try? AVAssetWriter(url: RecordSettings.fileUrl,
                                                        fileType: RecordSettings.fileType) else {
@@ -71,7 +71,7 @@ class ARAssetWriter: AssetWriterInterface {
             self.createPixelBufferAdapter(writerVideoInput: writerVideoInput)
             self.createAudioAssetWriterInput(assetWriter: assetWriter)
             
-            recordShouldStartSessionOnFirstFrame = true
+            self.recordShouldStartSessionOnFirstFrame = true
             guard assetWriter.startWriting() else {
                 self.delegate?.assetWriter(didEncounterError: .failedToRecordARVideo)
                 return
@@ -83,7 +83,7 @@ class ARAssetWriter: AssetWriterInterface {
     
     func stopVideoRecording() {
         recordQueue.async { [weak self] in
-            guard let self, isRecording else { return }
+            guard let self, self.isRecording else { return }
             self.assetWriter?.finishWriting { [weak self] in
                 guard let self else { return }
                 self.delegate?.assetWriter(didRecordVideoAtURL: RecordSettings.fileUrl)
