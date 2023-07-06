@@ -1,12 +1,15 @@
 import UIKit
 
 /// The main interface to use the `CameraKage` camera features.
-public class CameraKage: UIView {
+public class CameraKage {
     private var permissionManager: PermissionsManagerProtocol = PermissionsManager()
+    private var compressionManager: CompressionManagerInterface = CompressionManager()
     private var sessionComposer: SessionComposer = SessionComposer()
     
     /// Available cameras for the client's phone.
     public var availableCameraDevices: [CameraDevice] { CameraDevice.availableDevices }
+    
+    public static var shared = CameraKage()
     
     /**
      Create a view with a full camera integrated, capable of capturing photos and creating video recordings.
@@ -130,12 +133,49 @@ public class CameraKage: UIView {
     public func getMicrophonePermissionStatus() -> PermissionStatus {
         permissionManager.getAuthorizationStatus(for: .audio)
     }
+    
+    
+    /**
+     Compress a video located at a given URL.
+     
+     - parameter url: The location of the video to be compressed.
+     - parameter resolution: The desired output resolution of the video.
+     - parameter bitrate: The desired bitrate of the compressed video.
+     - parameter completion: Result containing either the URL of the compressed video or an error.
+     */
+    public func compressVideo(atURL url: URL,
+                              resolution: Resolution,
+                              bitrate: BitRate,
+                              completion: @escaping ((Result<URL, CompressionError>) -> Void)) {
+        compressionManager.compressVideo(withURL: url,
+                                         resolution: resolution,
+                                         bitrate: bitrate,
+                                         handler: completion)
+    }
+    
+    /**
+     Compress a photo with given data.
+     
+     - parameter data: The data of the image to be compressed.
+     - parameter quality: The compression quality of the photo.
+     - parameter resolution: The desired output resolution of the photo.
+     - parameter completion: Result containing either the data of the compressed photo or an error.
+     */
+    public func compressPhoto(withData data: Data,
+                              quality: ImageQuality,
+                              resolution: Resolution,
+                              completion: @escaping ((Result<Data, CompressionError>) -> Void)) {
+        compressionManager.compressImage(withData: data,
+                                         compressionQuality: quality,
+                                         resolution: resolution,
+                                         completion: completion)
+    }
 }
 
 // MARK: - Internal tests inits
 extension CameraKage {
     internal convenience init(permissionManager: PermissionsManagerProtocol) {
-        self.init(frame: .zero)
+        self.init()
         self.permissionManager = permissionManager
     }
 }

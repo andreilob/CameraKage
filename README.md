@@ -6,9 +6,8 @@
 <a href="https://github.com/andreilob/CameraKage/actions/workflows/builder.yml?query=workflows+Swift"><img src="https://img.shields.io/github/actions/workflow/status/andreilob/CameraKage/builder.yml"></a>
 <a href="https://swift.org/package-manager/"><img src="https://img.shields.io/badge/SPM-Supported-red"></a>
 <a href="https://swiftpackageindex.com/andreilob/CameraKage"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fandreilob%2FCameraKage%2Fbadge%3Ftype%3Dswift-versions"></a>
-<a href="https://support.apple.com/en-us/HT212788"><img src="https://img.shields.io/badge/iOS-15%2B-informational"></a>               
-<a href="https://raw.githubusercontent.com/andreilob/CameraKage/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-black"></a>
-<a href="https://github.com/andreilob/CameraKage/releases/tag/1.1.0"><img src="https://img.shields.io/badge/Version-1.1.1-informational"></a>         
+<a href="https://support.apple.com/en-us/HT212788"><img src="https://img.shields.io/badge/iOS-15%2B-informational"></a>           
+<a href="https://raw.githubusercontent.com/andreilob/CameraKage/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-black"></a>        
 </p>
 
 <p align="center">
@@ -22,6 +21,7 @@ CameraKage is a fully customizable, pure Swift, plug-and-play camera view.
 - [x] AR camera capable of loading face masks and capturing content with them.
 - [x] Metadata camera scanner. (QR, barcodes, etc.)
 - [x] Premission handling.
+- [x] Video and Photo compression and resizing.
 - [x] Delegate notifications.
 - [x] Camera flipping.
 - [x] Adjustments for exposure and focus of the camera.
@@ -30,19 +30,12 @@ CameraKage is a fully customizable, pure Swift, plug-and-play camera view.
 
 ## CameraKage Basic Setup
 
-Start setting up CameraKage by importing the package and creating a main module instance.
-
+Using the shared instance of the module you can handle camera and microphone permissions and create the type of camera view you would need. (Photo Camera, Video Camera or a full camera capable of both photo capture and video recordings)
 ```swift
-import CameraKage
-
-let cameraKage = CameraKage()
-```
-Using the module instance you can handle camera and microphone permissions and create the type of camera view you would need. (Photo Camera, Video Camera or a full camera capable of both photo capture and video recordings)
-```swift
-let cameraPermissionGranted = await cameraKage.requestCameraPermission()
-let microphonePermissionGranted = await cameraKage.requestMicrophonePermission()
+let cameraPermissionGranted = await CameraKage.shared.requestCameraPermission()
+let microphonePermissionGranted = await CameraKage.shared.requestMicrophonePermission()
 if cameraPermissionGranted, microphonePermissionGranted {
-    let cameraCreationResult = cameraKage.createCameraView(with: CameraComponentParsedOptions([
+    let cameraCreationResult = CameraKage.shared.createCameraView(with: CameraComponentParsedOptions([
         .cameraDevice(.backUltraWideCamera),
         .flipCameraDevice(.frontCamera),
         .maxVideoDuration(20.0),
@@ -74,13 +67,12 @@ With these steps you should have you camera up an running, what's left is just t
 CameraKage has the option to create an AR camera capable of loading masks onto the face of users and capture content with them.
 To use the AR camera you firstly have to import 3D models of the masks into the bundle of your application.
 
-After you have the 3D models you can start by initializing the CameraKage module and creating the ARCameraView and add it to your ViewController.
+After you have the 3D models you can start creating the ARCameraView and add it to your ViewController.
 
 ```swift
 import CameraKage
 
-let cameraKage = CameraKage()
-let arCameraView = cameraKage.cameraKage.createARCameraView()
+let arCameraView = CameraKage.shared.createARCameraView()
 // Register the delegate to receive info from the camera.
 arCameraView.registerDelegate(self)
 // Add the camera to the view and constraint it.
@@ -230,7 +222,7 @@ And also there are the camera specific delegate methods:
 
 ### Requirements
 - iOS 15.0+
-- Swift 5.5+
+- Swift 5.6+
 
 ### Installation
 
