@@ -39,13 +39,13 @@ final class CompressionManager: CompressionManagerInterface {
             case .success(let videoTrack):
                 guard let videoTrack else { return }
                 let compressionAssetsManagerBuilder = CompressionAssetsManagerBuilder()
-                let videoWriterSettings = createVideoWriterInputSettings(forVideoTrack: videoTrack,
+                let videoWriterSettings = self.createVideoWriterInputSettings(forVideoTrack: videoTrack,
                                                                          resolution: resolution,
                                                                          bitrate: bitrate)
                 let destinationPath = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("compressed.mov")
                 try? FileManager.default.removeItem(at: destinationPath)
                 
-                let videoWriterInput = createWriterInput(with: videoWriterSettings)
+                let videoWriterInput = self.createWriterInput(with: videoWriterSettings)
                 videoWriterInput.transform = videoTrack.preferredTransform
                 compressionAssetsManagerBuilder.setVideoWriterInput(videoWriterInput)
                 
